@@ -1,24 +1,25 @@
 package main
 
 import (
-	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"nn-blockchain-api/config"
 	"nn-blockchain-api/internal/health"
+	"nn-blockchain-api/internal/wallets"
 )
 
 func main() {
+	// Init logger
+	logger := logrus.New()
+
 	// Init config
 	cfg, err := config.Get(".")
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		logger.Fatalf("failed to load config: %v", err)
 	}
-
-	fmt.Println(cfg)
 
 	// Set-up Route
 	router := chi.NewRouter()
@@ -33,13 +34,25 @@ func main() {
 	}))
 	//router.Use(middleware.BasicAuth("authentication", map[string]string{cfg.User: cfg.Password}))
 
+	// Services
+	walletsSvc, err := wallets.NewService(cfg.GRpcHost, logger)
+	if err != nil {
+		logger.Fatalf("failed to create wallets service: %v", err)
+	}
+
 	// Handlers
 	healthHandler := health.NewHandler()
-	healthHandler.SetupRoutes(router)
+	walletsHandler := wallets.NewHandler(walletsSvc)
+
+	router.Route("/api/v1", func(r chi.Router) {
+		healthHandler.SetupRoutes(r)
+		walletsHandler.SetupRoutes(r)
+	})
 
 	// Start App
 	err = http.ListenAndServe(cfg.PORT, router)
 	if err != nil {
-		panic("ERROR: Something wrong with start app!")
+		logger.Fatalln("Failed to start HTTP server!")
+		return
 	}
 }

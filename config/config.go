@@ -8,6 +8,7 @@ import (
 type Config struct {
 	PORT        string `mapstructure:"PORT"`
 	Environment string `mapstructure:"APP_ENV"`
+	GRpcHost    string `mapstructure:"GRPC_HOST"`
 }
 
 func Get(path string) (*Config, error) {
