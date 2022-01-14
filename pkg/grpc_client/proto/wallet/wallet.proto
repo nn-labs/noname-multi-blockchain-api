@@ -10,6 +10,7 @@ service WalletService {
 
 message CreateWalletData {
   string walletName = 1;
+  optional string mnemonic = 2;
 }
 
 message CreateMnemonicData {

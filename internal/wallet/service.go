@@ -8,7 +8,7 @@ import (
 )
 
 type Service interface {
-	CreateWallet(ctx context.Context, walletName string) (*Wallet, error)
+	CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*Wallet, error)
 	CreateMnemonic(ctx context.Context, length, language string) (*Mnemonic, error)
 }
 
@@ -27,8 +27,8 @@ func NewService(walletClient pb.WalletServiceClient, log *logrus.Logger) (Servic
 	return &service{walletClient: walletClient, log: log}, nil
 }
 
-func (svc *service) CreateWallet(ctx context.Context, walletName string) (*Wallet, error) {
-	response, err := svc.walletClient.CreateWallet(ctx, &pb.CreateWalletData{WalletName: walletName})
+func (svc *service) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*Wallet, error) {
+	response, err := svc.walletClient.CreateWallet(ctx, &pb.CreateWalletData{WalletName: walletName, Mnemonic: mnemonic})
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf("failed to create btc wallet: %v", err)
 		return nil, errors.WithMessage(ErrInvalidWalletType, err.Error())

@@ -20,8 +20,8 @@ func NewHandler(walletSvc Service) *Handler {
 }
 
 func (h *Handler) SetupRoutes(router chi.Router) {
-	router.Get("/create-wallet", h.CreateWallet)
-	router.Get("/create-mnemonic", h.CreateMnemonic)
+	router.Post("/create-wallet", h.CreateWallet)
+	router.Post("/create-mnemonic", h.CreateMnemonic)
 }
 
 func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wallet, err := h.walletSvc.CreateWallet(context.Background(), dto.Name)
+	wallet, err := h.walletSvc.CreateWallet(context.Background(), dto.Name, &dto.Mnemonic)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), errors.NewNotFound(err.Error()))
 		return
