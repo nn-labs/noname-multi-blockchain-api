@@ -1,4 +1,4 @@
-package wallets
+package wallet
 
 import (
 	"context"
@@ -10,12 +10,12 @@ import (
 )
 
 type Handler struct {
-	walletsSvc Service
+	walletSvc Service
 }
 
-func NewHandler(walletsSvc Service) *Handler {
+func NewHandler(walletSvc Service) *Handler {
 	return &Handler{
-		walletsSvc: walletsSvc,
+		walletSvc: walletSvc,
 	}
 }
 
@@ -24,7 +24,7 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 }
 
 func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
-	var dto WalletNameDto
+	var dto CoinNameDto
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
@@ -37,7 +37,7 @@ func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wallet, err := h.walletsSvc.CreateWallet(context.Background(), dto.Name)
+	wallet, err := h.walletSvc.CreateWallet(context.Background(), dto.Name)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), errors.NewNotFound(err.Error()))
 		return

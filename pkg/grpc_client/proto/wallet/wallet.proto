@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-// protoc -I proto proto/wallets.proto --go_out=plugins=grpc:proto/
 option go_package = ".";
 
-service WalletsService {
+//protoc wallet.proto --go_out=. --go-grpc_out=.
+service WalletService {
   rpc CreateWallet (CoinName) returns (WalletInfo) {}
   rpc CreateMnemonic (Empty) returns (MnemonicInfo) {}
 }

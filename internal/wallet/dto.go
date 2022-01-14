@@ -1,4 +1,4 @@
-package wallets
+package wallet
 
 import (
 	"github.com/go-playground/validator/v10"
@@ -22,6 +22,6 @@ func Validate(dto interface{}) error {
 	return nil
 }
 
-type WalletNameDto struct {
+type CoinNameDto struct {
 	Name string `json:"name" validate:"required"`
 }

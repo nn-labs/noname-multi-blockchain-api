@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"nn-blockchain-api/config"
 	"nn-blockchain-api/internal/health"
-	"nn-blockchain-api/internal/wallets"
+	"nn-blockchain-api/internal/wallet"
+	"nn-blockchain-api/pkg/grpc_client"
 )
 
 func main() {
@@ -19,6 +20,12 @@ func main() {
 	cfg, err := config.Get(".")
 	if err != nil {
 		logger.Fatalf("failed to load config: %v", err)
+	}
+
+	// Set-up gRPC client
+	walletClient, err := grpc_client.NewWalletClient(cfg.GRpcHost)
+	if err != nil {
+		logger.Fatalf("failed to set-up wallet client: %v", err)
 	}
 
 	// Set-up Route
@@ -35,18 +42,18 @@ func main() {
 	//router.Use(middleware.BasicAuth("authentication", map[string]string{cfg.User: cfg.Password}))
 
 	// Services
-	walletsSvc, err := wallets.NewService(cfg.GRpcHost, logger)
+	walletSvc, err := wallet.NewService(walletClient, logger)
 	if err != nil {
-		logger.Fatalf("failed to create wallets service: %v", err)
+		logger.Fatalf("failed to create wallet service: %v", err)
 	}
 
 	// Handlers
 	healthHandler := health.NewHandler()
-	walletsHandler := wallets.NewHandler(walletsSvc)
+	walletHandler := wallet.NewHandler(walletSvc)
 
 	router.Route("/api/v1", func(r chi.Router) {
 		healthHandler.SetupRoutes(r)
-		walletsHandler.SetupRoutes(r)
+		walletHandler.SetupRoutes(r)
 	})
 
 	// Start App

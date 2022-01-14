@@ -1,12 +1,10 @@
-package wallets
+package wallet
 
 import (
 	"context"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	pb "nn-blockchain-api/internal/wallets/proto"
 	"nn-blockchain-api/pkg/errors"
+	"nn-blockchain-api/pkg/grpc_client/proto/wallet"
 )
 
 type Service interface {
@@ -14,30 +12,22 @@ type Service interface {
 }
 
 type service struct {
-	grpcHost string
-	log      *logrus.Logger
+	walletClient wallet.WalletServiceClient
+	log          *logrus.Logger
 }
 
-func NewService(grpcHost string, log *logrus.Logger) (Service, error) {
-	if grpcHost == "" {
-		return nil, errors.NewInternal("invalid grpc host")
+func NewService(walletClient wallet.WalletServiceClient, log *logrus.Logger) (Service, error) {
+	if walletClient == nil {
+		return nil, errors.NewInternal("invalid wallet client")
 	}
 	if log == nil {
 		return nil, errors.NewInternal("invalid logger")
 	}
-	return &service{grpcHost: grpcHost, log: log}, nil
+	return &service{walletClient: walletClient, log: log}, nil
 }
 
 func (svc *service) CreateWallet(ctx context.Context, walletName string) (*Wallet, error) {
-	conn, err := grpc.Dial(svc.grpcHost, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-
-	client := pb.NewWalletsServiceClient(conn)
-
-	response, err := client.CreateWallet(ctx, &pb.CoinName{Name: walletName})
+	response, err := svc.walletClient.CreateWallet(ctx, &wallet.CoinName{Name: walletName})
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf("failed to create btc wallet: %v", err)
 		return nil, errors.WithMessage(ErrInvalidWalletType, err.Error())

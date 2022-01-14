@@ -1,4 +1,4 @@
-package wallets
+package wallet
 
 import (
 	"nn-blockchain-api/pkg/codes"

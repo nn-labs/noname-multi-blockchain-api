@@ -1,4 +1,4 @@
-package wallets
+package wallet
 
 type Wallet struct {
 	Mnemonic string
