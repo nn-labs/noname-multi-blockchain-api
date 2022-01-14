@@ -30,7 +30,7 @@ func NewService(walletClient pb.WalletServiceClient, log *logrus.Logger) (Servic
 func (svc *service) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*Wallet, error) {
 	response, err := svc.walletClient.CreateWallet(ctx, &pb.CreateWalletData{WalletName: walletName, Mnemonic: mnemonic})
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf("failed to create btc wallet: %v", err)
+		svc.log.WithContext(ctx).Errorf("failed to create wallet: %v", err)
 		return nil, errors.WithMessage(ErrInvalidWalletType, err.Error())
 	}
 
