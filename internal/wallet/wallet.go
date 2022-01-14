@@ -6,3 +6,7 @@ type Wallet struct {
 	Address  string
 	Private  string
 }
+
+type Mnemonic struct {
+	Mnemonic string
+}

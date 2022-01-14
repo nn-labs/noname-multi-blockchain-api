@@ -25,3 +25,8 @@ func Validate(dto interface{}) error {
 type CoinNameDto struct {
 	Name string `json:"name" validate:"required"`
 }
+
+type MnemonicDTO struct {
+	Length   string `json:"length" validate:"required"`
+	Language string `json:"language" validate:"required"`
+}

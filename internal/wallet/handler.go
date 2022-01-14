@@ -21,6 +21,7 @@ func NewHandler(walletSvc Service) *Handler {
 
 func (h *Handler) SetupRoutes(router chi.Router) {
 	router.Get("/create-wallet", h.CreateWallet)
+	router.Get("/create-mnemonic", h.CreateMnemonic)
 }
 
 func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
@@ -44,4 +45,27 @@ func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond.Respond(w, http.StatusOK, wallet)
+}
+
+func (h *Handler) CreateMnemonic(w http.ResponseWriter, r *http.Request) {
+	var dto MnemonicDTO
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), ErrInvalidPayload)
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	mnemonic, err := h.walletSvc.CreateMnemonic(context.Background(), dto.Length, dto.Language)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, mnemonic)
 }

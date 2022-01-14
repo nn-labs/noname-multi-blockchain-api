@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.19.3
-// source: wallet/wallet.proto
+// source: wallet.proto
 
-package wallet
+package __
 
 import (
 	context "context"
@@ -22,8 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WalletServiceClient interface {
-	CreateWallet(ctx context.Context, in *CoinName, opts ...grpc.CallOption) (*WalletInfo, error)
-	CreateMnemonic(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MnemonicInfo, error)
+	CreateWallet(ctx context.Context, in *CreateWalletData, opts ...grpc.CallOption) (*WalletInfo, error)
+	CreateMnemonic(ctx context.Context, in *CreateMnemonicData, opts ...grpc.CallOption) (*MnemonicInfo, error)
 }
 
 type walletServiceClient struct {
@@ -34,7 +34,7 @@ func NewWalletServiceClient(cc grpc.ClientConnInterface) WalletServiceClient {
 	return &walletServiceClient{cc}
 }
 
-func (c *walletServiceClient) CreateWallet(ctx context.Context, in *CoinName, opts ...grpc.CallOption) (*WalletInfo, error) {
+func (c *walletServiceClient) CreateWallet(ctx context.Context, in *CreateWalletData, opts ...grpc.CallOption) (*WalletInfo, error) {
 	out := new(WalletInfo)
 	err := c.cc.Invoke(ctx, "/WalletService/CreateWallet", in, out, opts...)
 	if err != nil {
@@ -43,7 +43,7 @@ func (c *walletServiceClient) CreateWallet(ctx context.Context, in *CoinName, op
 	return out, nil
 }
 
-func (c *walletServiceClient) CreateMnemonic(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MnemonicInfo, error) {
+func (c *walletServiceClient) CreateMnemonic(ctx context.Context, in *CreateMnemonicData, opts ...grpc.CallOption) (*MnemonicInfo, error) {
 	out := new(MnemonicInfo)
 	err := c.cc.Invoke(ctx, "/WalletService/CreateMnemonic", in, out, opts...)
 	if err != nil {
@@ -56,8 +56,8 @@ func (c *walletServiceClient) CreateMnemonic(ctx context.Context, in *Empty, opt
 // All implementations must embed UnimplementedWalletServiceServer
 // for forward compatibility
 type WalletServiceServer interface {
-	CreateWallet(context.Context, *CoinName) (*WalletInfo, error)
-	CreateMnemonic(context.Context, *Empty) (*MnemonicInfo, error)
+	CreateWallet(context.Context, *CreateWalletData) (*WalletInfo, error)
+	CreateMnemonic(context.Context, *CreateMnemonicData) (*MnemonicInfo, error)
 	mustEmbedUnimplementedWalletServiceServer()
 }
 
@@ -65,10 +65,10 @@ type WalletServiceServer interface {
 type UnimplementedWalletServiceServer struct {
 }
 
-func (UnimplementedWalletServiceServer) CreateWallet(context.Context, *CoinName) (*WalletInfo, error) {
+func (UnimplementedWalletServiceServer) CreateWallet(context.Context, *CreateWalletData) (*WalletInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateWallet not implemented")
 }
-func (UnimplementedWalletServiceServer) CreateMnemonic(context.Context, *Empty) (*MnemonicInfo, error) {
+func (UnimplementedWalletServiceServer) CreateMnemonic(context.Context, *CreateMnemonicData) (*MnemonicInfo, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMnemonic not implemented")
 }
 func (UnimplementedWalletServiceServer) mustEmbedUnimplementedWalletServiceServer() {}
@@ -85,7 +85,7 @@ func RegisterWalletServiceServer(s grpc.ServiceRegistrar, srv WalletServiceServe
 }
 
 func _WalletService_CreateWallet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CoinName)
+	in := new(CreateWalletData)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -97,13 +97,13 @@ func _WalletService_CreateWallet_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: "/WalletService/CreateWallet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletServiceServer).CreateWallet(ctx, req.(*CoinName))
+		return srv.(WalletServiceServer).CreateWallet(ctx, req.(*CreateWalletData))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _WalletService_CreateMnemonic_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(CreateMnemonicData)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func _WalletService_CreateMnemonic_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/WalletService/CreateMnemonic",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletServiceServer).CreateMnemonic(ctx, req.(*Empty))
+		return srv.(WalletServiceServer).CreateMnemonic(ctx, req.(*CreateMnemonicData))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -137,5 +137,5 @@ var WalletService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "wallet/wallet.proto",
+	Metadata: "wallet.proto",
 }
