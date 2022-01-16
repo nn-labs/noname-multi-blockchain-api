@@ -7,6 +7,7 @@ import (
 	pb "nn-blockchain-api/pkg/grpc_client/proto/wallet"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/service_mock.go
 type Service interface {
 	CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*Wallet, error)
 	CreateMnemonic(ctx context.Context, length, language string) (*Mnemonic, error)
