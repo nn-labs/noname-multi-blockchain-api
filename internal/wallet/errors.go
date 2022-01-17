@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	StatusInvalidRequest    errors.Status = "invalid_request"
-	StatusInvalidPayload    errors.Status = "invalid_payload"
-	StatusInvalidWalletType errors.Status = "invalid_wallet_type"
-	StatusInternalError     errors.Status = "internal_error"
+	StatusInvalidRequest       errors.Status = "invalid_request"
+	StatusInvalidPayload       errors.Status = "invalid_payload"
+	StatusInvalidWalletType    errors.Status = "invalid_wallet_type"
+	StatusInternalError        errors.Status = "internal_error"
+	StatusFailedCreateMnemonic errors.Status = "error_create_mnemonic"
 )
 
 var (
@@ -17,4 +18,5 @@ var (
 	ErrInvalidWalletType = errors.New(codes.NotFound, StatusInvalidWalletType)
 	ErrInternal          = errors.New(codes.InternalError, StatusInternalError)
 	ErrInvalidPayload    = errors.New(codes.InternalError, StatusInvalidPayload)
+	ErrCreateMnemonic    = errors.New(codes.InternalError, StatusFailedCreateMnemonic)
 )
