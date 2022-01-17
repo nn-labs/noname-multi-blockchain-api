@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"nn-blockchain-api/config"
+	"nn-blockchain-api/internal/bitcoin"
 	"nn-blockchain-api/internal/health"
 	"nn-blockchain-api/internal/wallet"
 	"nn-blockchain-api/pkg/grpc_client"
@@ -47,13 +48,23 @@ func main() {
 		logger.Fatalf("failed to create wallet service: %v", err)
 	}
 
+	bitcoinSvc, err := bitcoin.NewService(logger)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin service: %v", err)
+	}
+
 	// Handlers
 	healthHandler := health.NewHandler()
 	walletHandler := wallet.NewHandler(walletSvc)
+	bitcoinHandler := bitcoin.NewHandler(bitcoinSvc)
 
 	router.Route("/api/v1", func(r chi.Router) {
 		healthHandler.SetupRoutes(r)
 		walletHandler.SetupRoutes(r)
+	})
+
+	router.Route("/api/v1/bitcoin", func(r chi.Router) {
+		bitcoinHandler.SetupRoutes(r)
 	})
 
 	// Start App
