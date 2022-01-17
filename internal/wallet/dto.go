@@ -22,7 +22,7 @@ func Validate(dto interface{}) error {
 	return nil
 }
 
-type CoinNameDto struct {
+type CoinNameDTO struct {
 	Name     string `json:"name" validate:"required"`
 	Mnemonic string `json:"mnemonic"`
 }

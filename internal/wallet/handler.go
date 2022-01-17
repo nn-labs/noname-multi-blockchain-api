@@ -25,7 +25,7 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 }
 
 func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
-	var dto CoinNameDto
+	var dto CoinNameDTO
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {

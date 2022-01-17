@@ -47,7 +47,7 @@ func (svc *service) CreateMnemonic(ctx context.Context, length, language string)
 	response, err := svc.walletClient.CreateMnemonic(ctx, &pb.CreateMnemonicData{MnemonicLength: length, Language: language})
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf("failed to create mnemonic: %v", err)
-		return nil, errors.WithMessage(ErrInternal, err.Error())
+		return nil, errors.WithMessage(ErrCreateMnemonic, err.Error())
 	}
 
 	return &Mnemonic{Mnemonic: response.Mnemonic}, nil
