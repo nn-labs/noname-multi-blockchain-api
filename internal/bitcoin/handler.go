@@ -1,6 +1,7 @@
 package bitcoin
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -22,10 +23,11 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 	router.Get("/status", h.HealthCheckHandler)
 
 	router.Post("/create-raw-tx", h.CreateRawTransaction)
+	router.Post("/sign-raw-tx", h.SignRawTransaction)
 }
 
 func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	status, err := h.btcSvc.StatusNode()
+	status, err := h.btcSvc.StatusNode(context.Background())
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -48,10 +50,14 @@ func (h *Handler) CreateRawTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transaction, err := h.btcSvc.CreateTransaction(&dto)
+	transaction, err := h.btcSvc.CreateTransaction(context.Background(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
 	}
-	respond.Respond(w, http.StatusOK, transaction)
+	respond.Respond(w, http.StatusOK, map[string]string{"tx": transaction})
+}
+
+func (h *Handler) SignRawTransaction(w http.ResponseWriter, r *http.Request) {
+
 }

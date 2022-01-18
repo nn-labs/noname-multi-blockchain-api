@@ -28,9 +28,9 @@ func CreateTransaction(utxos []*UTXO, addressTo string, spendAmount *big.Int) (s
 	}
 
 	// Need add fee to spend amount and then compare
-	if spendAmount.Int64() >= utxosAmount.Int64() {
-		return "", errors.New("your balance too low for this transaction")
-	}
+	//if spendAmount.Int64() >= utxosAmount.Int64() {
+	//	return "", errors.New("your balance too low for this transaction")
+	//}
 
 	sourceUtxosAmount := big.NewInt(0)
 	for idx := range utxos {
@@ -83,7 +83,7 @@ func CreateTransaction(utxos []*UTXO, addressTo string, spendAmount *big.Int) (s
 
 	err := Client(req, &msg)
 	if err != nil {
-		return "", errors.New("could not create transaction")
+		return "", errors.New(err.Error())
 	}
 
 	if msg.Error.Message != "" {

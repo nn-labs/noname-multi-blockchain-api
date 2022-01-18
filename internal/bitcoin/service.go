@@ -1,14 +1,15 @@
 package bitcoin
 
 import (
+	"context"
 	"github.com/sirupsen/logrus"
 	"nn-blockchain-api/pkg/errors"
 	"nn-blockchain-api/pkg/rpc/bitcoin"
 )
 
 type Service interface {
-	StatusNode() (*bitcoin.StatusNodeDTO, error)
-	CreateTransaction(dto *RawTransactionDTO) (string, error)
+	StatusNode(ctx context.Context) (*bitcoin.StatusNodeDTO, error)
+	CreateTransaction(ctx context.Context, dto *RawTransactionDTO) (string, error)
 }
 
 type service struct {
@@ -22,21 +23,21 @@ func NewService(log *logrus.Logger) (Service, error) {
 	return &service{log: log}, nil
 }
 
-func (svc *service) StatusNode() (*bitcoin.StatusNodeDTO, error) {
+func (svc *service) StatusNode(ctx context.Context) (*bitcoin.StatusNodeDTO, error) {
 	sn, err := bitcoin.StatusNode()
 	if err != nil {
-		svc.log.Fatal("failed check node status")
+		svc.log.WithContext(ctx).Errorf("failed check node status")
 		return nil, errors.NewInternal("failed check node status")
 	}
 
 	return sn, nil
 }
 
-func (svc *service) CreateTransaction(dto *RawTransactionDTO) (string, error) {
+func (svc *service) CreateTransaction(ctx context.Context, dto *RawTransactionDTO) (string, error) {
 	tx, err := bitcoin.CreateTransaction(dto.Utxo, dto.ToAddress, dto.Amount)
 	if err != nil {
-		svc.log.Fatal("failed create transaction")
-		return "", errors.NewInternal("failed create transaction")
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return "", errors.NewInternal(err.Error())
 	}
 
 	return tx, nil
