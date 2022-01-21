@@ -9,8 +9,8 @@ import (
 
 //go:generate mockgen -source=service.go -destination=mocks/service_mock.go
 type Service interface {
-	CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*Wallet, error)
-	CreateMnemonic(ctx context.Context, length, language string) (*Mnemonic, error)
+	CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*DTO, error)
+	CreateMnemonic(ctx context.Context, length, language string) (*CreatedMnemonicDTO, error)
 }
 
 type service struct {
@@ -28,14 +28,14 @@ func NewService(walletClient pb.WalletServiceClient, log *logrus.Logger) (Servic
 	return &service{walletClient: walletClient, log: log}, nil
 }
 
-func (svc *service) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*Wallet, error) {
+func (svc *service) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*DTO, error) {
 	response, err := svc.walletClient.CreateWallet(ctx, &pb.CreateWalletData{WalletName: walletName, Mnemonic: mnemonic})
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf("failed to create wallet: %v", err)
 		return nil, errors.WithMessage(ErrInvalidWalletType, err.Error())
 	}
 
-	return &Wallet{
+	return &DTO{
 		Mnemonic: response.Wallet.Mnemonic,
 		CoinName: response.Wallet.CoinName,
 		Address:  response.Wallet.Address,
@@ -43,12 +43,12 @@ func (svc *service) CreateWallet(ctx context.Context, walletName string, mnemoni
 	}, nil
 }
 
-func (svc *service) CreateMnemonic(ctx context.Context, length, language string) (*Mnemonic, error) {
+func (svc *service) CreateMnemonic(ctx context.Context, length, language string) (*CreatedMnemonicDTO, error) {
 	response, err := svc.walletClient.CreateMnemonic(ctx, &pb.CreateMnemonicData{MnemonicLength: length, Language: language})
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf("failed to create mnemonic: %v", err)
 		return nil, errors.WithMessage(ErrCreateMnemonic, err.Error())
 	}
 
-	return &Mnemonic{Mnemonic: response.Mnemonic}, nil
+	return &CreatedMnemonicDTO{Mnemonic: response.Mnemonic}, nil
 }

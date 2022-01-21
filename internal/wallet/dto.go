@@ -31,3 +31,14 @@ type MnemonicDTO struct {
 	Length   string `json:"length" validate:"required"`
 	Language string `json:"language" validate:"required"`
 }
+
+type DTO struct {
+	Mnemonic string
+	CoinName string
+	Address  string
+	Private  string
+}
+
+type CreatedMnemonicDTO struct {
+	Mnemonic string
+}

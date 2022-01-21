@@ -55,7 +55,7 @@ func (h *Handler) CreateRawTransaction(w http.ResponseWriter, r *http.Request) {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
 	}
-	respond.Respond(w, http.StatusOK, map[string]string{"tx": transaction})
+	respond.Respond(w, http.StatusOK, transaction)
 }
 
 func (h *Handler) SignRawTransaction(w http.ResponseWriter, r *http.Request) {

@@ -13,6 +13,14 @@ type UnspentList struct {
 	ScriptPubKey string `json:"scriptPubKey"`
 }
 
+type UTXO struct {
+	TxId   string   `json:"tx_id"`
+	Vout   int64    `json:"vout"`
+	Amount *big.Int `json:"amount"`
+	//Spendable bool
+	PKScript string `json:"pk_script"`
+}
+
 func CreateTransaction(utxos []*UTXO, addressTo string, spendAmount *big.Int) (string, error) {
 	//var unspentParams []map[string]interface{}
 	var unspentParams []*UnspentList
