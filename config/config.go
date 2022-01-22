@@ -9,6 +9,7 @@ type Config struct {
 	PORT        string `mapstructure:"PORT"`
 	Environment string `mapstructure:"APP_ENV"`
 	GRpcHost    string `mapstructure:"GRPC_HOST"`
+	EthEndpoint string `mapstructure:"ETH_ENDPOINT"`
 }
 
 func Get(path string) (*Config, error) {

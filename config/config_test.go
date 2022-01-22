@@ -11,6 +11,7 @@ func TestInit(t *testing.T) {
 		port        string
 		environment string
 		gRpcHost    string
+		ethEndpoint string
 	}
 
 	type args struct {
@@ -21,6 +22,7 @@ func TestInit(t *testing.T) {
 		os.Setenv("PORT", env.port)
 		os.Setenv("ENVIRONMENT", env.environment)
 		os.Setenv("GRPC_HOST", env.gRpcHost)
+		os.Setenv("ETH_ENDPOINT", env.ethEndpoint)
 	}
 
 	tests := []struct {
@@ -36,12 +38,14 @@ func TestInit(t *testing.T) {
 					port:        ":5000",
 					environment: "development",
 					gRpcHost:    "localhost:123321",
+					ethEndpoint: "localhost:7545",
 				},
 			},
 			want: &Config{
 				PORT:        ":5000",
 				Environment: "development",
 				GRpcHost:    "localhost:123321",
+				EthEndpoint: "localhost:7545",
 			},
 		},
 	}
