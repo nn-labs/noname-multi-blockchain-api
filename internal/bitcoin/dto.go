@@ -82,3 +82,11 @@ type RawTransactionDTO struct {
 	ToAddress string   `json:"to_address" validate:"required"`
 	Amount    *big.Int `json:"amount" validate:"required"`
 }
+
+type SignRawTransactionDTO struct {
+	Tx string `json:"tx"`
+}
+
+type SendRawTransactionDTO struct {
+	SignedTx string `json:"signed_tx"`
+}

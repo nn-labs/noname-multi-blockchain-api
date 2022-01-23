@@ -60,9 +60,31 @@ func (h *Handler) CreateRawTransaction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SignRawTransaction(w http.ResponseWriter, r *http.Request) {
+	var dto SignRawTransactionDTO
 
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
 }
 
 func (h *Handler) SendRawTransaction(w http.ResponseWriter, r *http.Request) {
+	var dto SendRawTransactionDTO
 
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
 }
