@@ -11,38 +11,6 @@ type ethClient struct {
 	endpoint string
 }
 
-type BaseRequest struct {
-	JsonRpc string   `json:"jsonrpc"`
-	Method  string   `json:"method"`
-	Params  []string `json:"params,array"`
-	Id      string   `json:"id"`
-}
-
-type BaseResponse struct {
-	Id      string `json:"id"`
-	JsonRpc string `json:"jsonrpc"`
-}
-
-type BaseResponseWithIntResult struct {
-	BaseResponse
-	Result int `json:"result"`
-}
-
-type BaseResponseWithStringResult struct {
-	BaseResponse
-	Result string `json:"result"`
-}
-
-type BaseResponseWithBoolResult struct {
-	BaseResponse
-	Result bool `json:"result"`
-}
-
-type BaseResponseWithArrayResult struct {
-	BaseResponse
-	Result []string `json:"result,array"`
-}
-
 type IEthClient interface {
 	Send(body io.Reader) (*http.Response, error)
 	GetWeb3ClientVersion() (*BaseResponseWithStringResult, error)
