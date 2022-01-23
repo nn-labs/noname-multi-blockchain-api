@@ -77,8 +77,8 @@ type CreatedRawTransactionDTO struct {
 }
 
 type RawTransactionDTO struct {
-	Utxo        []*bitcoin.UTXO `json:"utxo" validate:"required"`
-	FromAddress string          `json:"from_address" validate:"required"`
-	ToAddress   string          `json:"to_address" validate:"required"`
-	Amount      *big.Int        `json:"amount" validate:"required"`
+	Utxo []*bitcoin.UTXO `json:"utxo" validate:"required"`
+	//FromAddress string          `json:"from_address" validate:"required"`
+	ToAddress string   `json:"to_address" validate:"required"`
+	Amount    *big.Int `json:"amount" validate:"required"`
 }

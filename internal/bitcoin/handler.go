@@ -42,7 +42,7 @@ func (h *Handler) CreateRawTransaction(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
-		respond.Respond(w, errors.HTTPCode(err), err)
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
 		return
 	}
 
