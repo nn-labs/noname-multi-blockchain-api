@@ -3,7 +3,6 @@ package eth
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"log"
 	"testing"
 )
 import "nn-blockchain-api/config"
@@ -25,7 +24,7 @@ func TestClient(t *testing.T) {
 	ethClient := GetBaseSetupTest()
 	web3ClientVersion, err := ethClient.GetWeb3ClientVersion()
 	if err != nil {
-		log.Fatalln(err)
+		t.Errorf(err.Error())
 	}
 
 	fmt.Println(web3ClientVersion)

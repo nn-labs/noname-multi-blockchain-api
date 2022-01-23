@@ -1,10 +1,10 @@
 package eth
 
-func GetWeb3Sha3(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
+func GetNetListing(client IEthClient) (*BaseResponseWithBoolResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",
-		Method:  "web3_sha3",
-		Params:  params,
+		Method:  "net_listening",
+		Params:  []string{},
 		Id:      "64",
 	}
 
@@ -18,7 +18,7 @@ func GetWeb3Sha3(client IEthClient, params []string) (*BaseResponseWithStringRes
 		return nil, err
 	}
 
-	baseResponse, err := client.DecodeBaseResponseWithStringResult(response)
+	baseResponse, err := client.DecodeBaseResponseWithBoolResult(response)
 	if err != nil {
 		return nil, err
 	}

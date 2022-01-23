@@ -1,10 +1,10 @@
 package eth
 
-func GetWeb3Sha3(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
+func GetNetPeerCount(client IEthClient) (*BaseResponseWithIntResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",
-		Method:  "web3_sha3",
-		Params:  params,
+		Method:  "net_peerCount",
+		Params:  []string{},
 		Id:      "64",
 	}
 
@@ -18,7 +18,7 @@ func GetWeb3Sha3(client IEthClient, params []string) (*BaseResponseWithStringRes
 		return nil, err
 	}
 
-	baseResponse, err := client.DecodeBaseResponseWithStringResult(response)
+	baseResponse, err := client.DecodeBaseResponseWithIntResult(response)
 	if err != nil {
 		return nil, err
 	}

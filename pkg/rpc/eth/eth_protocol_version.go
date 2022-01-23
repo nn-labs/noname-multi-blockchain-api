@@ -1,10 +1,10 @@
 package eth
 
-func GetWeb3Sha3(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
+func GetEthProtocolVersion(client IEthClient) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",
-		Method:  "web3_sha3",
-		Params:  params,
+		Method:  "eth_protocolVersion",
+		Params:  []string{},
 		Id:      "64",
 	}
 

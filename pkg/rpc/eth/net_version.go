@@ -1,10 +1,18 @@
 package eth
 
-func GetWeb3Sha3(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
+var (
+	EthMainnet     string = "1"
+	MordenTestnet  string = "2"
+	RopstenTestnet string = "3"
+	RinkebyTestnet string = "4"
+	KovanTestnet   string = "42"
+)
+
+func GetNetVersion(client IEthClient) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",
-		Method:  "web3_sha3",
-		Params:  params,
+		Method:  "net_version",
+		Params:  []string{},
 		Id:      "64",
 	}
 
