@@ -1,10 +1,9 @@
 package bitcoin
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
-	"strings"
 )
 
 type UnspentList struct {
@@ -21,7 +20,7 @@ type UTXO struct {
 	PKScript string `json:"pk_script"`
 }
 
-func CreateTransaction(utxos []*UTXO, addressTo string, spendAmount *big.Int) (string, error) {
+func CreateTransaction(client IBtcClient, utxos []*UTXO, addressTo string, spendAmount *big.Int) (string, error) {
 	//var unspentParams []map[string]interface{}
 	var unspentParams []*UnspentList
 
@@ -72,12 +71,8 @@ func CreateTransaction(utxos []*UTXO, addressTo string, spendAmount *big.Int) (s
 		//map[string]interface{}{addressFrom: utxosAmount.Sub(utxosAmount, spendAmount)},
 	}
 
-	req := struct {
-		JsonRPC string        `json:"json_rpc"`
-		Method  string        `json:"method"`
-		Params  []interface{} `json:"params"`
-	}{
-		JsonRPC: "2.0",
+	req := BaseRequest{
+		JsonRpc: "2.0",
 		Method:  "createrawtransaction",
 		Params:  []interface{}{unspentParams, addressesParams},
 	}
@@ -89,19 +84,27 @@ func CreateTransaction(utxos []*UTXO, addressTo string, spendAmount *big.Int) (s
 		} `json:"error"`
 	}{}
 
-	err := Client(req, &msg)
+	body, err := client.EncodeBaseRequest(req)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
 
-	if msg.Error.Message != "" {
-		return "", errors.New(msg.Error.Message)
+	response, err := client.Send(body)
+	if err != nil {
+		return "", errors.New(err.Error())
 	}
 
-	fmt.Printf("%-18s %s\n", "Balance:", utxosAmount)
-	fmt.Printf("%-18s %s\n", "Spend amount:", spendAmount)
-	fmt.Printf("%-18s %s\n", "Remainder: ", utxosAmount.Sub(utxosAmount, spendAmount))
-	fmt.Println(strings.Repeat("-", 106))
+	defer response.Body.Close()
+
+	err = json.NewDecoder(response.Body).Decode(&msg)
+	if err != nil {
+		return "", err
+	}
 
 	return msg.Result, nil
+
+	//fmt.Printf("%-18s %s\n", "Balance:", utxosAmount)
+	//fmt.Printf("%-18s %s\n", "Spend amount:", spendAmount)
+	//fmt.Printf("%-18s %s\n", "Remainder: ", utxosAmount.Sub(utxosAmount, spendAmount))
+	//fmt.Println(strings.Repeat("-", 106))
 }

@@ -11,6 +11,7 @@ import (
 	"nn-blockchain-api/internal/health"
 	"nn-blockchain-api/internal/wallet"
 	"nn-blockchain-api/pkg/grpc_client"
+	bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin"
 )
 
 func main() {
@@ -27,6 +28,12 @@ func main() {
 	walletClient, err := grpc_client.NewWalletClient(cfg.GRpcHost)
 	if err != nil {
 		logger.Fatalf("failed to set-up wallet client: %v", err)
+	}
+
+	// Rpc clients
+	btcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpcEndpoint, cfg.BtcRpcUser, cfg.BtcRpcPassword)
+	if err != nil {
+		logger.Fatalf("failed to set-up btc rpc client: %v", err)
 	}
 
 	// Set-up Route
@@ -48,7 +55,7 @@ func main() {
 		logger.Fatalf("failed to create wallet service: %v", err)
 	}
 
-	bitcoinSvc, err := bitcoin.NewService(logger)
+	bitcoinSvc, err := bitcoin.NewService(logger, btcClient)
 	if err != nil {
 		logger.Fatalf("failed to create bitcoin service: %v", err)
 	}

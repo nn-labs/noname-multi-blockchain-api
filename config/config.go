@@ -6,9 +6,12 @@ import (
 )
 
 type Config struct {
-	PORT        string `mapstructure:"PORT"`
-	Environment string `mapstructure:"APP_ENV"`
-	GRpcHost    string `mapstructure:"GRPC_HOST"`
+	PORT           string `mapstructure:"PORT"`
+	Environment    string `mapstructure:"APP_ENV"`
+	GRpcHost       string `mapstructure:"GRPC_HOST"`
+	BtcRpcEndpoint string `mapstructure:"BTC_RPC_ENDPOINT"`
+	BtcRpcUser     string `mapstructure:"BTC_RPC_USER"`
+	BtcRpcPassword string `mapstructure:"BTC_RPC_PASSWORD"`
 }
 
 func Get(path string) (*Config, error) {

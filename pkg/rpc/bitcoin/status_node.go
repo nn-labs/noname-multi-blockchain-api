@@ -1,6 +1,7 @@
 package bitcoin
 
 import (
+	"encoding/json"
 	"errors"
 )
 
@@ -52,7 +53,13 @@ type StatusNode struct {
 	Warnings string `json:"warnings"`
 }
 
-func Status() (*StatusNode, error) {
+func Status(client IBtcClient) (*StatusNode, error) {
+	req := BaseRequest{
+		JsonRpc: "2.0",
+		Method:  "getblockchaininfo",
+		Params:  []interface{}{},
+	}
+
 	msg := struct {
 		Result StatusNode `json:"result"`
 		Error  struct {
@@ -61,23 +68,19 @@ func Status() (*StatusNode, error) {
 		} `json:"error"`
 	}{}
 
-	req := struct {
-		JsonRPC string   `json:"json_rpc"`
-		Method  string   `json:"method"`
-		Params  []string `json:"params"`
-	}{
-		JsonRPC: "2.0",
-		Method:  "getblockchaininfo",
-		Params:  []string{},
-	}
-
-	err := Client(req, &msg)
+	body, err := client.EncodeBaseRequest(req)
 	if err != nil {
-		return nil, errors.New(msg.Error.Message)
+		return nil, errors.New(err.Error())
 	}
 
-	if msg.Error.Message != "" {
-		return nil, errors.New(msg.Error.Message)
+	response, err := client.Send(body)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	err = json.NewDecoder(response.Body).Decode(&msg)
+	if err != nil {
+		return nil, err
 	}
 
 	return &msg.Result, nil

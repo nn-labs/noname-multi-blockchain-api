@@ -24,6 +24,7 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 
 	router.Post("/create-raw-tx", h.CreateRawTransaction)
 	router.Post("/sign-raw-tx", h.SignRawTransaction)
+	router.Post("/send-raw-tx", h.SendRawTransaction)
 }
 
 func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,5 +60,9 @@ func (h *Handler) CreateRawTransaction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SignRawTransaction(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *Handler) SendRawTransaction(w http.ResponseWriter, r *http.Request) {
 
 }
