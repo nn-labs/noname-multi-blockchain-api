@@ -1,5 +1,6 @@
 package eth
 
+// GetEthBlockTransactionCountByHash https://eth.wiki/json-rpc/API#eth_getblocktransactioncountbyhash
 func GetEthBlockTransactionCountByHash(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

@@ -1,5 +1,6 @@
 package eth
 
+// GetEthStorageAt https://eth.wiki/json-rpc/API#eth_getstorageat
 func GetEthStorageAt(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

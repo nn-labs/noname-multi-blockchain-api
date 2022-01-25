@@ -1,5 +1,6 @@
 package eth
 
+// GetEthMining https://eth.wiki/json-rpc/API#eth_mining
 func GetEthMining(client IEthClient) (*BaseResponseWithBoolResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

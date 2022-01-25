@@ -1,5 +1,6 @@
 package eth
 
+// GetEthProtocolVersion https://eth.wiki/json-rpc/API#eth_protocolversion
 func GetEthProtocolVersion(client IEthClient) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

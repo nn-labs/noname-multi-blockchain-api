@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// GetEthSync https://eth.wiki/json-rpc/API#eth_syncing
 func GetEthSync(client IEthClient) (*BaseResponseWithBoolResult, *EthSyncResponse, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

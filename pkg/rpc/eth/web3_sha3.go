@@ -1,5 +1,6 @@
 package eth
 
+// GetWeb3Sha3 https://eth.wiki/json-rpc/API#web3_sha3
 func GetWeb3Sha3(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

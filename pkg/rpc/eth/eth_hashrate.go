@@ -1,5 +1,6 @@
 package eth
 
+// GetEthHashrate https://eth.wiki/json-rpc/API#eth_hashrate
 func GetEthHashrate(client IEthClient) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

@@ -1,5 +1,6 @@
 package eth
 
+// GetNetListing https://eth.wiki/json-rpc/API#net_listening
 func GetNetListing(client IEthClient) (*BaseResponseWithBoolResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

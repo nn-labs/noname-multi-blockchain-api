@@ -1,5 +1,6 @@
 package eth
 
+// GetEthBlockNumber https://eth.wiki/json-rpc/API#eth_blocknumber
 func GetEthBlockNumber(client IEthClient) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

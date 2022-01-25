@@ -1,5 +1,6 @@
 package eth
 
+// GetEthCoinbase https://eth.wiki/json-rpc/API#eth_coinbase
 func GetEthCoinbase(client IEthClient) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

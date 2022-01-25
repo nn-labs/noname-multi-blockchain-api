@@ -8,6 +8,7 @@ var (
 	KovanTestnet   string = "42"
 )
 
+// GetNetVersion https://eth.wiki/json-rpc/API#net_version
 func GetNetVersion(client IEthClient) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

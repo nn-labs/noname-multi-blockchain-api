@@ -1,5 +1,6 @@
 package eth
 
+// GetEthAccounts https://eth.wiki/json-rpc/API#eth_accounts
 func GetEthAccounts(client IEthClient) (*BaseResponseWithArrayResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

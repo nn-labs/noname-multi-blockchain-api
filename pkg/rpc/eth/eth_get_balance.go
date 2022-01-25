@@ -1,5 +1,6 @@
 package eth
 
+// GetEthBalance https://eth.wiki/json-rpc/API#eth_getbalance
 func GetEthBalance(client IEthClient, params []string) (*BaseResponseWithStringResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

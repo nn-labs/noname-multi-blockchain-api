@@ -1,5 +1,6 @@
 package eth
 
+// GetNetPeerCount https://eth.wiki/json-rpc/API#net_peercount
 func GetNetPeerCount(client IEthClient) (*BaseResponseWithIntResult, error) {
 	request := BaseRequest{
 		JsonRpc: "2.0",

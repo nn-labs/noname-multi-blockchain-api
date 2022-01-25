@@ -1,12 +1,12 @@
 package eth
 
-// GetEthGasPrice https://eth.wiki/json-rpc/API#eth_gasprice
-func GetEthGasPrice(client IEthClient) (*BaseResponseWithStringResult, error) {
-	request := BaseRequest{
+// GetEthSignTransaction https://eth.wiki/json-rpc/API#eth_signtransaction
+func GetEthSignTransaction(client IEthClient, params map[string]string) (*BaseResponseWithStringResult, error) {
+	request := BaseRequestWithMapParams{
 		JsonRpc: "2.0",
-		Method:  "eth_gasPrice",
-		Params:  []string{},
-		Id:      "73",
+		Method:  "eth_signTransaction",
+		Params:  params,
+		Id:      "1",
 	}
 
 	baseRequest, err := client.EncodeBaseRequest(request)

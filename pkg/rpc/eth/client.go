@@ -14,7 +14,7 @@ type ethClient struct {
 type IEthClient interface {
 	Send(body io.Reader) (*http.Response, error)
 	GetWeb3ClientVersion() (*BaseResponseWithStringResult, error)
-	EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error)
+	EncodeBaseRequest(request interface{}) (*bytes.Buffer, error)
 	DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error)
 	DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error)
 	DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error)
@@ -54,7 +54,7 @@ func (e *ethClient) GetWeb3ClientVersion() (*BaseResponseWithStringResult, error
 	return e.DecodeBaseResponseWithStringResult(resp)
 }
 
-func (e *ethClient) EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error) {
+func (e *ethClient) EncodeBaseRequest(request interface{}) (*bytes.Buffer, error) {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
