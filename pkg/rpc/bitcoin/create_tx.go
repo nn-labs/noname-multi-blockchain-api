@@ -3,78 +3,13 @@ package bitcoin
 import (
 	"encoding/json"
 	"errors"
-	"math/big"
 )
 
-type UnspentList struct {
-	TxId         string `json:"txid"`
-	Vout         int64  `json:"vout"`
-	ScriptPubKey string `json:"scriptPubKey"`
-}
-
-type UTXO struct {
-	TxId   string   `json:"tx_id"`
-	Vout   int64    `json:"vout"`
-	Amount *big.Int `json:"amount"`
-	//Spendable bool
-	PKScript string `json:"pk_script"`
-}
-
-func CreateTransaction(client IBtcClient, utxos []*UTXO, addressTo string, spendAmount *big.Int) (string, error) {
-	//var unspentParams []map[string]interface{}
-	var unspentParams []*UnspentList
-
-	utxosAmount := big.NewInt(0)
-
-	// Convert spendAmount to BTC amount
-	//fmt.Println(float64(spendAmount.Int64()) / 1.0e8)
-
-	// Add all unspent amount
-	for idx := range utxos {
-		utxosAmount.Add(utxosAmount, utxos[idx].Amount)
-	}
-
-	// Need add fee to spend amount and then compare
-	//if spendAmount.Int64() >= utxosAmount.Int64() {
-	//	return "", errors.New("your balance too low for this transaction")
-	//}
-
-	sourceUtxosAmount := big.NewInt(0)
-	for idx := range utxos {
-		sourceUtxosAmount.Add(sourceUtxosAmount, utxos[idx].Amount)
-
-		if spendAmount.Int64() > sourceUtxosAmount.Int64() {
-			//paramMap := make(map[string]interface{})
-			//paramMap["txid"] = utxos[idx].TxId
-			//paramMap["vout"] = utxos[idx].Vout
-			//paramMap["scriptPubKey"] = utxos[idx].PKScript
-			//unspentParams = append(unspentParams, paramMap)
-
-			unspentParams = append(unspentParams, &UnspentList{
-				TxId:         utxos[idx].TxId,
-				Vout:         utxos[idx].Vout,
-				ScriptPubKey: utxos[idx].PKScript,
-			})
-		} else {
-			unspentParams = append(unspentParams, &UnspentList{
-				TxId:         utxos[idx].TxId,
-				Vout:         utxos[idx].Vout,
-				ScriptPubKey: utxos[idx].PKScript,
-			})
-			break
-		}
-	}
-
-	addressesParams := []interface{}{
-		map[string]interface{}{addressTo: float64(spendAmount.Int64()) / 1.0e8},
-		//map[string]interface{}{"mrvZjXUNupoEpQf6KsgiVgzLz7DUca6Kfv": 0.00001000},
-		//map[string]interface{}{addressFrom: utxosAmount.Sub(utxosAmount, spendAmount)},
-	}
-
+func CreateTransaction(client IBtcClient, inputs []map[string]interface{}, outputs []map[string]string) (string, error) {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "createrawtransaction",
-		Params:  []interface{}{unspentParams, addressesParams},
+		Params:  []interface{}{inputs, outputs},
 	}
 
 	msg := struct {
@@ -101,10 +36,9 @@ func CreateTransaction(client IBtcClient, utxos []*UTXO, addressTo string, spend
 		return "", err
 	}
 
-	return msg.Result, nil
+	if msg.Error.Message != "" {
+		return "", errors.New(msg.Error.Message)
+	}
 
-	//fmt.Printf("%-18s %s\n", "Balance:", utxosAmount)
-	//fmt.Printf("%-18s %s\n", "Spend amount:", spendAmount)
-	//fmt.Printf("%-18s %s\n", "Remainder: ", utxosAmount.Sub(utxosAmount, spendAmount))
-	//fmt.Println(strings.Repeat("-", 106))
+	return msg.Result, nil
 }

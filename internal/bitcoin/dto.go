@@ -2,9 +2,7 @@ package bitcoin
 
 import (
 	"github.com/go-playground/validator/v10"
-	"math/big"
 	"nn-blockchain-api/pkg/errors"
-	"nn-blockchain-api/pkg/rpc/bitcoin"
 )
 
 func Validate(dto interface{}) error {
@@ -73,18 +71,38 @@ type StatusNodeDTO struct {
 }
 
 type CreatedRawTransactionDTO struct {
-	Tx string `json:"tx"`
+	Tx  string  `json:"tx"`
+	Fee float64 `json:"fee"`
 }
 
-type RawTransactionDTO struct {
-	Utxo []*bitcoin.UTXO `json:"utxo" validate:"required"`
-	//FromAddress string          `json:"from_address" validate:"required"`
-	ToAddress string   `json:"to_address" validate:"required"`
-	Amount    *big.Int `json:"amount" validate:"required"`
+type CreateRawTransactionDTO struct {
+	Utxo []struct {
+		TxId     string `json:"txid" validate:"required"`
+		Vout     int64  `json:"vout" validate:"required"`
+		Amount   int64  `json:"amount" validate:"required"`
+		PKScript string `json:"pk_script" validate:"required"`
+	} `json:"utxo" validate:"dive"`
+	FromAddress string `json:"from_address" validate:"required"`
+	ToAddress   string `json:"to_address" validate:"required"`
+	Amount      int64  `json:"amount" validate:"required"`
+}
+
+type FundForRawTransactionDTO struct {
+	CreatedTxHex  string `json:"created_tx_hex" validate:"required"`
+	ChangeAddress string `json:"change_address" validate:"required"`
+}
+
+type FundedRawTransactionDTO struct {
+	Tx  string  `json:"tx"`
+	Fee float64 `json:"fee"`
 }
 
 type SignRawTransactionDTO struct {
 	Tx string `json:"tx"`
+}
+
+type SignedRawTransactionDTO struct {
+	Hash string `json:"hash"`
 }
 
 type SendRawTransactionDTO struct {
