@@ -91,7 +91,7 @@ func TestService_CreateWallet(t *testing.T) {
 		walletClient pb.WalletServiceClient
 		dto          *CoinNameDTO
 		setup        func(context.Context, *CoinNameDTO)
-		expect       func(*testing.T, *Wallet, error)
+		expect       func(*testing.T, *DTO, error)
 	}{
 		{
 			name:         "should return status ok",
@@ -104,7 +104,7 @@ func TestService_CreateWallet(t *testing.T) {
 					Mnemonic:   &dto.Mnemonic,
 				}).Return(&pb.WalletInfo{Wallet: walletData}, nil)
 			},
-			expect: func(t *testing.T, w *Wallet, err error) {
+			expect: func(t *testing.T, w *DTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, w.CoinName, dto.Name)
 			},
@@ -120,7 +120,7 @@ func TestService_CreateWallet(t *testing.T) {
 					Mnemonic:   &dto.Mnemonic,
 				}).Return(nil, ErrInvalidWalletType)
 			},
-			expect: func(t *testing.T, w *Wallet, err error) {
+			expect: func(t *testing.T, w *DTO, err error) {
 				assert.NotNil(t, err)
 				assert.Equal(t, errors.WithMessage(ErrInvalidWalletType, "code: 404; status: invalid_wallet_type"), err)
 			},
@@ -162,7 +162,7 @@ func TestService_CreateMnemonic(t *testing.T) {
 		walletClient pb.WalletServiceClient
 		dto          *MnemonicDTO
 		setup        func(context.Context, *MnemonicDTO)
-		expect       func(*testing.T, *Mnemonic, error)
+		expect       func(*testing.T, *CreatedMnemonicDTO, error)
 	}{
 		{
 			name:         "should return status ok",
@@ -175,7 +175,7 @@ func TestService_CreateMnemonic(t *testing.T) {
 					Language:       dto.Language,
 				}).Return(&pb.MnemonicInfo{Mnemonic: mnemonicReturns}, nil)
 			},
-			expect: func(t *testing.T, mnemonic *Mnemonic, err error) {
+			expect: func(t *testing.T, mnemonic *CreatedMnemonicDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, mnemonic.Mnemonic, mnemonicReturns)
 			},
@@ -191,7 +191,7 @@ func TestService_CreateMnemonic(t *testing.T) {
 					Language:       dto.Language,
 				}).Return(nil, ErrCreateMnemonic)
 			},
-			expect: func(t *testing.T, mnemonic *Mnemonic, err error) {
+			expect: func(t *testing.T, mnemonic *CreatedMnemonicDTO, err error) {
 				assert.NotNil(t, err)
 				assert.Equal(t, errors.WithMessage(ErrCreateMnemonic, "code: 500; status: error_create_mnemonic"), err)
 			},
