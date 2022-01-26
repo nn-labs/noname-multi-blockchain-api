@@ -38,6 +38,10 @@ func GetCurrentFee(client IBtcClient) (*float64, error) {
 		return nil, err
 	}
 
+	if msg.Error.Message != "" {
+		return nil, errors.New(msg.Error.Message)
+	}
+
 	var fee float64
 	fee = msg.Result.Feerate
 	// sanity check

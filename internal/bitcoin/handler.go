@@ -96,6 +96,14 @@ func (h *Handler) SignRawTransaction(w http.ResponseWriter, r *http.Request) {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
 	}
+
+	signedTx, err := h.btcSvc.SignTransaction(context.Background(), &dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, signedTx)
 }
 
 func (h *Handler) SendRawTransaction(w http.ResponseWriter, r *http.Request) {

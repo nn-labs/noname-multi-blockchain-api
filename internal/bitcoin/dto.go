@@ -98,7 +98,14 @@ type FundedRawTransactionDTO struct {
 }
 
 type SignRawTransactionDTO struct {
-	Tx string `json:"tx"`
+	Tx         string `json:"tx" validate:"required"`
+	PrivateKey string `json:"privateKey" validate:"required"`
+	Utxo       []struct {
+		TxId     string `json:"txid" validate:"required"`
+		Vout     int64  `json:"vout" validate:"required"`
+		Amount   int64  `json:"amount" validate:"required"`
+		PKScript string `json:"pk_script" validate:"required"`
+	} `json:"utxo" validate:"dive"`
 }
 
 type SignedRawTransactionDTO struct {

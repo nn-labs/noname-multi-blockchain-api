@@ -83,5 +83,9 @@ func Status(client IBtcClient) (*StatusNode, error) {
 		return nil, err
 	}
 
+	if msg.Error.Message != "" {
+		return nil, errors.New(msg.Error.Message)
+	}
+
 	return &msg.Result, nil
 }
