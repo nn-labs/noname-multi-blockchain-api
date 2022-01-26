@@ -119,4 +119,12 @@ func (h *Handler) SendRawTransaction(w http.ResponseWriter, r *http.Request) {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
 	}
+
+	transactionId, err := h.btcSvc.SendTransaction(context.Background(), &dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, transactionId)
 }

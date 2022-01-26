@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/sirupsen/logrus"
-	"log"
 	"math/big"
 	"nn-blockchain-api/pkg/errors"
 	"nn-blockchain-api/pkg/rpc/bitcoin"
@@ -27,6 +26,7 @@ type Service interface {
 	CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error)
 	FoundForRawTransaction(ctx context.Context, dto *FundForRawTransactionDTO) (*FundedRawTransactionDTO, error)
 	SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error)
+	SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error)
 }
 
 type service struct {
@@ -68,7 +68,8 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	feeRate, err := bitcoin.GetCurrentFeeRate(svc.btcClient)
 	//log.Printf("%-18s %s\n", "current fee rate:", feeRate)
 	if err != nil {
-		log.Fatal(err)
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
 	}
 
 	// Calculate all unspent amount
@@ -89,7 +90,8 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 
 		sourceUTXOHash, err := chainhash.NewHashFromStr(hashStr)
 		if err != nil {
-			log.Fatal(err)
+			svc.log.WithContext(ctx).Errorf(err.Error())
+			return nil, errors.NewInternal(err.Error())
 		}
 
 		if dto.Amount <= sourceUtxosAmount.Int64() {
@@ -121,12 +123,14 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	// create the transaction outputs
 	destAddress, err := btcutil.DecodeAddress(dto.ToAddress, chainParams)
 	if err != nil {
-		log.Fatal(err)
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
 	}
 
 	destScript, err := txscript.PayToAddrScript(destAddress)
 	if err != nil {
-		log.Fatal(err)
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
 	}
 
 	// tx out to send btc to user
@@ -137,7 +141,8 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	change = new(big.Int).Sub(change, new(big.Int).SetInt64(dto.Amount))
 	//change = new(big.Int).Sub(change, totalFee)
 	if change.Cmp(big.NewInt(0)) == -1 {
-		log.Fatal(err)
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
 	}
 
 	if change.Int64() != 0 {
@@ -159,12 +164,14 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 		// our change address
 		changeSendToAddress, err := btcutil.DecodeAddress(dto.FromAddress, chainParams)
 		if err != nil {
-			log.Fatal(err)
+			svc.log.WithContext(ctx).Errorf(err.Error())
+			return nil, errors.NewInternal(err.Error())
 		}
 
 		changeSendToScript, err := txscript.PayToAddrScript(changeSendToAddress)
 		if err != nil {
-			log.Fatal(err)
+			svc.log.WithContext(ctx).Errorf(err.Error())
+			return nil, errors.NewInternal(err.Error())
 		}
 
 		//tx out to send change back to us
@@ -192,7 +199,9 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	notSignedTxBuf := bytes.NewBuffer(make([]byte, 0, tx.SerializeSize()))
 	err = tx.Serialize(notSignedTxBuf)
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
 	}
 
 	return &CreatedRawTransactionDTO{
@@ -228,5 +237,17 @@ func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransaction
 
 	return &SignedRawTransactionDTO{
 		Hash: tx,
+	}, nil
+}
+
+func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error) {
+	txId, err := bitcoin.SendTx(svc.btcClient, dto.SignedTx)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
+	}
+
+	return &SentRawTransactionDTO{
+		TxId: txId,
 	}, nil
 }

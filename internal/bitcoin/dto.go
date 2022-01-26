@@ -113,5 +113,9 @@ type SignedRawTransactionDTO struct {
 }
 
 type SendRawTransactionDTO struct {
-	SignedTx string `json:"signed_tx"`
+	SignedTx string `json:"signed_tx" validate:"required"`
+}
+
+type SentRawTransactionDTO struct {
+	TxId string `json:"tx_id"`
 }
