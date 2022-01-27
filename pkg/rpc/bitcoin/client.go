@@ -8,6 +8,7 @@ import (
 	"nn-blockchain-api/pkg/errors"
 )
 
+//go:generate mockgen -source=client.go -destination=mocks/client_mock.go
 type btcClient struct {
 	btcEndpoint string
 	btcUser     string

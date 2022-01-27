@@ -15,6 +15,8 @@ import (
 	"nn-blockchain-api/pkg/rpc/bitcoin"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/service_mock.go
+
 type UnspentList struct {
 	TxId         string `json:"txid"`
 	Vout         int64  `json:"vout"`
