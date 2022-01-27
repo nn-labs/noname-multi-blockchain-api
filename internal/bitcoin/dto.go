@@ -87,6 +87,40 @@ type CreateRawTransactionDTO struct {
 	Amount      int64  `json:"amount" validate:"required"`
 }
 
+type DecodeRawTransactionDTO struct {
+	Tx string `json:"tx" validate:"required"`
+}
+
+type DecodedRawTransactionDTO struct {
+	Txid     string `json:"txid"`
+	Hash     string `json:"hash"`
+	Version  int    `json:"version"`
+	Size     int    `json:"size"`
+	Vsize    int    `json:"vsize"`
+	Weight   int    `json:"weight"`
+	Locktime int    `json:"locktime"`
+	Vin      []struct {
+		Txid      string `json:"txid"`
+		Vout      int    `json:"vout"`
+		ScriptSig struct {
+			Asm string `json:"asm"`
+			Hex string `json:"hex"`
+		} `json:"scriptSig"`
+
+		Sequence int64 `json:"sequence"`
+	} `json:"vin"`
+	Vout []struct {
+		Value        float64 `json:"value"`
+		N            int     `json:"n"`
+		ScriptPubKey struct {
+			Asm     string `json:"asm"`
+			Hex     string `json:"hex"`
+			Address string `json:"address"`
+			Type    string `json:"type"`
+		} `json:"scriptPubKey"`
+	} `json:"vout"`
+}
+
 type FundForRawTransactionDTO struct {
 	CreatedTxHex  string `json:"created_tx_hex" validate:"required"`
 	ChangeAddress string `json:"change_address" validate:"required"`

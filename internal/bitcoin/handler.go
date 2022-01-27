@@ -23,6 +23,7 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 	router.Get("/status", h.HealthCheckHandler)
 
 	router.Post("/create-raw-tx", h.CreateRawTransaction)
+	router.Post("/decode-raw-tx", h.DecodeRawTransaction)
 	router.Post("/fund-for-raw-tx", h.FundForRawTransaction)
 	router.Post("/sign-raw-tx", h.SignRawTransaction)
 	router.Post("/send-raw-tx", h.SendRawTransaction)
@@ -127,4 +128,27 @@ func (h *Handler) SendRawTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond.Respond(w, http.StatusOK, transactionId)
+}
+
+func (h *Handler) DecodeRawTransaction(w http.ResponseWriter, r *http.Request) {
+	var dto DecodeRawTransactionDTO
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	decodedTx, err := h.btcSvc.DecodeTransaction(context.Background(), &dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, decodedTx)
 }

@@ -26,6 +26,7 @@ type UnspentList struct {
 type Service interface {
 	StatusNode(ctx context.Context) (*StatusNodeDTO, error)
 	CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error)
+	DecodeTransaction(ctx context.Context, dto *DecodeRawTransactionDTO) (*DecodedRawTransactionDTO, error)
 	FoundForRawTransaction(ctx context.Context, dto *FundForRawTransactionDTO) (*FundedRawTransactionDTO, error)
 	SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error)
 	SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error)
@@ -209,6 +210,26 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	return &CreatedRawTransactionDTO{
 		Tx:  hex.EncodeToString(notSignedTxBuf.Bytes()),
 		Fee: btcutil.Amount(totalFee.Int64()).ToBTC(),
+	}, nil
+}
+
+func (svc *service) DecodeTransaction(ctx context.Context, dto *DecodeRawTransactionDTO) (*DecodedRawTransactionDTO, error) {
+	decodedTx, err := bitcoin.DecodeTx(svc.btcClient, dto.Tx)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
+	}
+
+	return &DecodedRawTransactionDTO{
+		Txid:     decodedTx.Txid,
+		Hash:     decodedTx.Hash,
+		Version:  decodedTx.Version,
+		Size:     decodedTx.Size,
+		Vsize:    decodedTx.Vsize,
+		Weight:   decodedTx.Weight,
+		Locktime: decodedTx.Locktime,
+		Vin:      decodedTx.Vin,
+		Vout:     decodedTx.Vout,
 	}, nil
 }
 
