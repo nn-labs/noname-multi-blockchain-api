@@ -164,12 +164,37 @@ type SentRawTransactionDTO struct {
 }
 
 type ImportAddressDTO struct {
-	Address string `json:"address" validate:"required"`
-	Network string `json:"network" validate:"required"`
+	Address  string `json:"address" validate:"required"`
+	WalletId string `json:"wallet_id" validate:"required"`
+	Network  string `json:"network" validate:"required"`
 }
 
 type ImportAddressInfoDTO struct {
 	Message string `json:"message"`
+}
+
+type WalletDTO struct {
+	WalletId string `json:"wallet_id" validate:"required"`
+	Network  string `json:"network" validate:"required"`
+}
+
+type WalletInfoDTO struct {
+	Walletname            string      `json:"walletname"`
+	Walletversion         int         `json:"walletversion"`
+	Format                string      `json:"format"`
+	Balance               float64     `json:"balance"`
+	UnconfirmedBalance    float64     `json:"unconfirmed_balance"`
+	ImmatureBalance       float64     `json:"immature_balance"`
+	Txcount               int         `json:"txcount"`
+	Keypoololdest         int         `json:"keypoololdest"`
+	Keypoolsize           int         `json:"keypoolsize"`
+	Hdseedid              string      `json:"hdseedid"`
+	KeypoolsizeHdInternal int         `json:"keypoolsize_hd_internal"`
+	Paytxfee              float64     `json:"paytxfee"`
+	PrivateKeysEnabled    bool        `json:"private_keys_enabled"`
+	AvoidReuse            bool        `json:"avoid_reuse"`
+	Scanning              interface{} `json:"scanning"`
+	Descriptors           bool        `json:"descriptors"`
 }
 
 type CreateWalletDTO struct {
@@ -183,16 +208,28 @@ type CreatedWalletInfoDTO struct {
 }
 
 type LoadWalletDTO struct {
-	Network string `json:"network" validate:"required"`
+	WalletId string `json:"wallet_id" validate:"required"`
+	Network  string `json:"network" validate:"required"`
 }
 
 type LoadWalletInfoDTO struct {
 	Message string `json:"message"`
 }
 
+type RescanWalletDTO struct {
+	WalletId string `json:"wallet_id" validate:"required"`
+	Network  string `json:"network" validate:"required"`
+}
+
+type RescanWalletInfoDTO struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}
+
 type ListUnspentDTO struct {
-	Address string `json:"address" validate:"required"`
-	Network string `json:"network" validate:"required"`
+	Address  string `json:"address" validate:"required"`
+	WalletId string `json:"wallet_id" validate:"required"`
+	Network  string `json:"network" validate:"required"`
 }
 
 type UnspentInfoDTO struct {

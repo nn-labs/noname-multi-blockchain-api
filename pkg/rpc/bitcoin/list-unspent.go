@@ -18,7 +18,7 @@ type Unspent struct {
 	Safe          bool    `json:"safe"`
 }
 
-func ListUnspent(client IBtcClient, address, network string) ([]*Unspent, error) {
+func ListUnspent(client IBtcClient, address, walletId, network string) ([]*Unspent, error) {
 	msg := struct {
 		Result []*Unspent `json:"result"`
 		Error  struct {
@@ -37,10 +37,12 @@ func ListUnspent(client IBtcClient, address, network string) ([]*Unspent, error)
 		return nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, true, network)
+	response, err := client.Send(body, walletId, network)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
+
+	defer response.Body.Close()
 
 	err = json.NewDecoder(response.Body).Decode(&msg)
 	if err != nil {

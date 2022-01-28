@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func LoadWallet(client IBtcClient, network string) error {
+func LoadWallet(client IBtcClient, walletId, network string) error {
 	msg := struct {
 		Result struct {
 			Name    string `json:"name"`
@@ -19,7 +19,7 @@ func LoadWallet(client IBtcClient, network string) error {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "loadwallet",
-		Params:  []interface{}{"development"},
+		Params:  []interface{}{walletId},
 	}
 
 	body, err := client.EncodeBaseRequest(req)
@@ -27,10 +27,12 @@ func LoadWallet(client IBtcClient, network string) error {
 		return errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, false, network)
+	response, err := client.Send(body, "", network)
 	if err != nil {
 		return errors.New(err.Error())
 	}
+
+	defer response.Body.Close()
 
 	err = json.NewDecoder(response.Body).Decode(&msg)
 	if err != nil {

@@ -24,7 +24,7 @@ func CreateTransaction(client IBtcClient, inputs []map[string]interface{}, outpu
 		return "", errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, false, network)
+	response, err := client.Send(body, "", network)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}

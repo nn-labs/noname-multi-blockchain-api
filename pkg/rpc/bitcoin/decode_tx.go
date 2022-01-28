@@ -54,10 +54,12 @@ func DecodeTx(client IBtcClient, tx string, network string) (*DecodedTx, error) 
 		return nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, false, network)
+	response, err := client.Send(body, "", network)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
+
+	defer response.Body.Close()
 
 	err = json.NewDecoder(response.Body).Decode(&msg)
 	if err != nil {

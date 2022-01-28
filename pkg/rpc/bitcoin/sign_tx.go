@@ -29,10 +29,12 @@ func SignTx(client IBtcClient, tx, privateKey string, utxos []map[string]interfa
 		return "", errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, false, network)
+	response, err := client.Send(body, "", network)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
+
+	defer response.Body.Close()
 
 	err = json.NewDecoder(response.Body).Decode(&msg)
 	if err != nil {

@@ -29,7 +29,7 @@ type BaseResponse struct {
 }
 
 type IBtcClient interface {
-	Send(body io.Reader, wallet bool, network string) (*http.Response, error)
+	Send(body io.Reader, walletId string, network string) (*http.Response, error)
 	EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error)
 	//DecodeBaseResponse(response *http.Response, msg interface{}) (*BaseResponse, error)
 }
@@ -56,7 +56,7 @@ func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword s
 	}, nil
 }
 
-func (btc *btcClient) Send(body io.Reader, wallet bool, network string) (*http.Response, error) {
+func (btc *btcClient) Send(body io.Reader, walletId string, network string) (*http.Response, error) {
 	var endPoint string
 
 	if network == "main" {
@@ -65,8 +65,8 @@ func (btc *btcClient) Send(body io.Reader, wallet bool, network string) (*http.R
 		endPoint = btc.btcEndpointTestNet
 	}
 
-	if wallet {
-		endPoint = endPoint + "/wallet/development"
+	if walletId != "" {
+		endPoint = endPoint + "/wallet/" + walletId
 	}
 
 	client := &http.Client{}

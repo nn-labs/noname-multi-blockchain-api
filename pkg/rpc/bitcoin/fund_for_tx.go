@@ -34,7 +34,7 @@ func FundForRawTransaction(client IBtcClient, createdTx, changeAddress, network 
 		return "", nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, false, network)
+	response, err := client.Send(body, "", network)
 	if err != nil {
 		return "", nil, errors.New(err.Error())
 	}

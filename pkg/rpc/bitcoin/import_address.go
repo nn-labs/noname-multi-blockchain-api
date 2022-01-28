@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func ImportAddress(client IBtcClient, address, network string) error {
+func ImportAddress(client IBtcClient, address, walletId, network string) error {
 	msg := struct {
 		Result string `json:"result"`
 		Error  struct {
@@ -24,10 +24,12 @@ func ImportAddress(client IBtcClient, address, network string) error {
 		return errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, true, network)
+	response, err := client.Send(body, walletId, network)
 	if err != nil {
 		return errors.New(err.Error())
 	}
+
+	defer response.Body.Close()
 
 	err = json.NewDecoder(response.Body).Decode(&msg)
 	if err != nil {

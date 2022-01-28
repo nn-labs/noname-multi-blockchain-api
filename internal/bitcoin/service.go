@@ -32,9 +32,11 @@ type Service interface {
 	SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error)
 	SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error)
 
-	//CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error)
+	WalletInfo(ctx context.Context, dto *WalletDTO) (*WalletInfoDTO, error)
+	CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error)
 	LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWalletInfoDTO, error)
 	ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*ImportAddressInfoDTO, error)
+	RescanWallet(ctx context.Context, dto *RescanWalletDTO) (*RescanWalletInfoDTO, error)
 	ListUnspent(ctx context.Context, dto *ListUnspentDTO) (*ListUnspentInfoDTO, error)
 }
 
@@ -281,18 +283,45 @@ func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransaction
 	}, nil
 }
 
-//func (svc *service) CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error) {
-//	walletId, err := bitcoin.CreateWallet(svc.btcClient, dto.Network)
-//	if err != nil {
-//		svc.log.WithContext(ctx).Errorf(err.Error())
-//		return nil, errors.NewInternal(err.Error())
-//	}
-//
-//	return &CreatedWalletInfoDTO{WalletId: walletId}, nil
-//}
+func (svc *service) WalletInfo(ctx context.Context, dto *WalletDTO) (*WalletInfoDTO, error) {
+	info, err := bitcoin.WalletInfo(svc.btcClient, dto.WalletId, dto.Network)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
+	}
+
+	return &WalletInfoDTO{
+		Walletname:            info.Walletname,
+		Walletversion:         info.Walletversion,
+		Format:                info.Format,
+		Balance:               info.Balance,
+		UnconfirmedBalance:    info.UnconfirmedBalance,
+		ImmatureBalance:       info.ImmatureBalance,
+		Txcount:               info.Txcount,
+		Keypoololdest:         info.Keypoololdest,
+		Keypoolsize:           info.Keypoolsize,
+		Hdseedid:              info.Hdseedid,
+		KeypoolsizeHdInternal: info.KeypoolsizeHdInternal,
+		Paytxfee:              info.Paytxfee,
+		PrivateKeysEnabled:    info.PrivateKeysEnabled,
+		AvoidReuse:            info.AvoidReuse,
+		Scanning:              info.Scanning,
+		Descriptors:           info.Descriptors,
+	}, nil
+}
+
+func (svc *service) CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error) {
+	walletId, err := bitcoin.CreateWallet(svc.btcClient, dto.Network)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
+	}
+
+	return &CreatedWalletInfoDTO{WalletId: walletId}, nil
+}
 
 func (svc *service) LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWalletInfoDTO, error) {
-	err := bitcoin.LoadWallet(svc.btcClient, dto.Network)
+	err := bitcoin.LoadWallet(svc.btcClient, dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())
@@ -304,7 +333,7 @@ func (svc *service) LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWa
 }
 
 func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*ImportAddressInfoDTO, error) {
-	err := bitcoin.ImportAddress(svc.btcClient, dto.Address, dto.Network)
+	err := bitcoin.ImportAddress(svc.btcClient, dto.Address, dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())
@@ -315,8 +344,21 @@ func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*
 	}, nil
 }
 
+func (svc *service) RescanWallet(ctx context.Context, dto *RescanWalletDTO) (*RescanWalletInfoDTO, error) {
+	err := bitcoin.RescanWallet(svc.btcClient, dto.WalletId, dto.Network)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
+	}
+
+	return &RescanWalletInfoDTO{
+		Status:  "scanning has been started",
+		Message: "if you want to check status of scan, you can you getWalletInfo method",
+	}, nil
+}
+
 func (svc *service) ListUnspent(ctx context.Context, dto *ListUnspentDTO) (*ListUnspentInfoDTO, error) {
-	list, err := bitcoin.ListUnspent(svc.btcClient, dto.Address, dto.Network)
+	list, err := bitcoin.ListUnspent(svc.btcClient, dto.Address, dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())
