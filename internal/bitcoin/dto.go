@@ -189,3 +189,25 @@ type LoadWalletDTO struct {
 type LoadWalletInfoDTO struct {
 	Message string `json:"message"`
 }
+
+type ListUnspentDTO struct {
+	Address string `json:"address" validate:"required"`
+	Network string `json:"network" validate:"required"`
+}
+
+type UnspentInfoDTO struct {
+	Txid          string  `json:"txid"`
+	Vout          int     `json:"vout"`
+	Address       string  `json:"address"`
+	Label         string  `json:"label"`
+	ScriptPubKey  string  `json:"scriptPubKey"`
+	Amount        float64 `json:"amount"`
+	Confirmations int     `json:"confirmations"`
+	Spendable     bool    `json:"spendable"`
+	Solvable      bool    `json:"solvable"`
+	Safe          bool    `json:"safe"`
+}
+
+type ListUnspentInfoDTO struct {
+	Result []*UnspentInfoDTO
+}

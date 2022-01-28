@@ -33,6 +33,7 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 	//router.Post("/create-wallet", h.CreateWallet)
 	router.Post("/load-wallet", h.LoadWallet)
 	router.Post("/import-address", h.ImportAddress)
+	router.Post("/list-utx", h.ListUnspent)
 }
 
 func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
@@ -239,4 +240,27 @@ func (h *Handler) ImportAddress(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond.Respond(w, http.StatusOK, info)
+}
+
+func (h *Handler) ListUnspent(w http.ResponseWriter, r *http.Request) {
+	var dto ListUnspentDTO
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	list, err := h.btcSvc.ListUnspent(context.Background(), &dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, list)
 }

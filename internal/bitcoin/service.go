@@ -35,6 +35,7 @@ type Service interface {
 	//CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error)
 	LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWalletInfoDTO, error)
 	ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*ImportAddressInfoDTO, error)
+	ListUnspent(ctx context.Context, dto *ListUnspentDTO) (*ListUnspentInfoDTO, error)
 }
 
 type service struct {
@@ -312,4 +313,30 @@ func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*
 	return &ImportAddressInfoDTO{
 		Message: "successful",
 	}, nil
+}
+
+func (svc *service) ListUnspent(ctx context.Context, dto *ListUnspentDTO) (*ListUnspentInfoDTO, error) {
+	list, err := bitcoin.ListUnspent(svc.btcClient, dto.Address, dto.Network)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
+	}
+
+	var result []*UnspentInfoDTO
+	for _, unspent := range list {
+		result = append(result, &UnspentInfoDTO{
+			Txid:          unspent.Txid,
+			Vout:          unspent.Vout,
+			Address:       unspent.Address,
+			Label:         unspent.Label,
+			ScriptPubKey:  unspent.ScriptPubKey,
+			Amount:        unspent.Amount,
+			Confirmations: unspent.Confirmations,
+			Spendable:     unspent.Spendable,
+			Solvable:      unspent.Solvable,
+			Safe:          unspent.Safe,
+		})
+	}
+
+	return &ListUnspentInfoDTO{Result: result}, err
 }
