@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func FundForRawTransaction(client IBtcClient, createdTx, changeAddress string) (string, *float64, error) {
+func FundForRawTransaction(client IBtcClient, createdTx, changeAddress, network string) (string, *float64, error) {
 	subtractFeeFromOutputs := []int64{0}
 
 	params := map[string]interface{}{
@@ -34,7 +34,7 @@ func FundForRawTransaction(client IBtcClient, createdTx, changeAddress string) (
 		return "", nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body)
+	response, err := client.Send(body, false, network)
 	if err != nil {
 		return "", nil, errors.New(err.Error())
 	}

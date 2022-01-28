@@ -10,9 +10,10 @@ import (
 
 //go:generate mockgen -source=client.go -destination=mocks/client_mock.go
 type btcClient struct {
-	btcEndpoint string
-	btcUser     string
-	btcPassword string
+	btcEndpointTestNet string
+	btcEndpointMainNet string
+	btcUser            string
+	btcPassword        string
 }
 
 type BaseRequest struct {
@@ -28,14 +29,17 @@ type BaseResponse struct {
 }
 
 type IBtcClient interface {
-	Send(body io.Reader) (*http.Response, error)
+	Send(body io.Reader, wallet bool, network string) (*http.Response, error)
 	EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error)
 	//DecodeBaseResponse(response *http.Response, msg interface{}) (*BaseResponse, error)
 }
 
-func NewBtcClient(btcEndpoint, btcUser, btcPassword string) (IBtcClient, error) {
-	if btcEndpoint == "" {
-		return nil, errors.NewInternal("failed check btc endpoint")
+func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword string) (IBtcClient, error) {
+	if btcEndpointTestNet == "" {
+		return nil, errors.NewInternal("failed check btc test net endpoint")
+	}
+	if btcEndpointTestNet == "" {
+		return nil, errors.NewInternal("failed check btc main net endpoint")
 	}
 	if btcUser == "" {
 		return nil, errors.NewInternal("failed check btc user")
@@ -45,18 +49,28 @@ func NewBtcClient(btcEndpoint, btcUser, btcPassword string) (IBtcClient, error) 
 	}
 
 	return &btcClient{
-		btcEndpoint: btcEndpoint,
-		btcUser:     btcUser,
-		btcPassword: btcPassword,
+		btcEndpointTestNet: btcEndpointTestNet,
+		btcEndpointMainNet: btcEndpointMainNet,
+		btcUser:            btcUser,
+		btcPassword:        btcPassword,
 	}, nil
 }
 
-func (btc *btcClient) Send(body io.Reader) (*http.Response, error) {
-	//resp, err := http.Post(e.btcEndpoint, "application/json", body)
-	//return resp, err
+func (btc *btcClient) Send(body io.Reader, wallet bool, network string) (*http.Response, error) {
+	var endPoint string
+
+	if network == "main" {
+		endPoint = btc.btcEndpointMainNet
+	} else {
+		endPoint = btc.btcEndpointTestNet
+	}
+
+	if wallet {
+		endPoint = endPoint + "/wallet/development"
+	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", btc.btcEndpoint, body)
+	req, err := http.NewRequest("POST", endPoint, body)
 	if err != nil {
 		return nil, err
 	}

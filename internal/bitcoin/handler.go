@@ -20,17 +20,23 @@ func NewHandler(btcSvc Service) *Handler {
 }
 
 func (h *Handler) SetupRoutes(router chi.Router) {
-	router.Get("/status", h.HealthCheckHandler)
+	router.Post("/status", h.HealthCheckHandler)
 
+	// Transaction
 	router.Post("/create-raw-tx", h.CreateRawTransaction)
 	router.Post("/decode-raw-tx", h.DecodeRawTransaction)
 	router.Post("/fund-for-raw-tx", h.FundForRawTransaction)
 	router.Post("/sign-raw-tx", h.SignRawTransaction)
 	router.Post("/send-raw-tx", h.SendRawTransaction)
+
+	// Wallet/Unspent transaction list
+	router.Post("/import-address", h.ImportAddress)
 }
 
 func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	status, err := h.btcSvc.StatusNode(context.Background())
+	var dto StatusNodeDTO
+
+	status, err := h.btcSvc.StatusNode(context.Background(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -151,4 +157,27 @@ func (h *Handler) DecodeRawTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond.Respond(w, http.StatusOK, decodedTx)
+}
+
+func (h *Handler) ImportAddress(w http.ResponseWriter, r *http.Request) {
+	var dto ImportAddressDTO
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	err = h.btcSvc.ImportAddress(context.Background(), &dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, "OK")
 }

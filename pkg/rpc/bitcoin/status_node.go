@@ -53,7 +53,7 @@ type StatusNode struct {
 	Warnings string `json:"warnings"`
 }
 
-func Status(client IBtcClient) (*StatusNode, error) {
+func Status(client IBtcClient, network string) (*StatusNode, error) {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "getblockchaininfo",
@@ -73,7 +73,7 @@ func Status(client IBtcClient) (*StatusNode, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body)
+	response, err := client.Send(body, false, network)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}

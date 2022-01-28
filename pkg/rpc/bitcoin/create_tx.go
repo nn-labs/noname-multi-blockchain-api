@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func CreateTransaction(client IBtcClient, inputs []map[string]interface{}, outputs []map[string]string) (string, error) {
+func CreateTransaction(client IBtcClient, inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error) {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "createrawtransaction",
@@ -24,7 +24,7 @@ func CreateTransaction(client IBtcClient, inputs []map[string]interface{}, outpu
 		return "", errors.New(err.Error())
 	}
 
-	response, err := client.Send(body)
+	response, err := client.Send(body, false, network)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}

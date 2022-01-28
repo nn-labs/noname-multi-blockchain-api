@@ -23,6 +23,10 @@ func Validate(dto interface{}) error {
 }
 
 type StatusNodeDTO struct {
+	Network string `json:"network" validate:"required"`
+}
+
+type StatusNodeInfoDTO struct {
 	Chain                string      `json:"chain"`
 	Blocks               interface{} `json:"blocks"`
 	Headers              interface{} `json:"headers"`
@@ -85,10 +89,12 @@ type CreateRawTransactionDTO struct {
 	FromAddress string `json:"from_address" validate:"required"`
 	ToAddress   string `json:"to_address" validate:"required"`
 	Amount      int64  `json:"amount" validate:"required"`
+	Network     string `json:"network" validate:"required"`
 }
 
 type DecodeRawTransactionDTO struct {
-	Tx string `json:"tx" validate:"required"`
+	Tx      string `json:"tx" validate:"required"`
+	Network string `json:"network" validate:"required"`
 }
 
 type DecodedRawTransactionDTO struct {
@@ -124,6 +130,7 @@ type DecodedRawTransactionDTO struct {
 type FundForRawTransactionDTO struct {
 	CreatedTxHex  string `json:"created_tx_hex" validate:"required"`
 	ChangeAddress string `json:"change_address" validate:"required"`
+	Network       string `json:"network" validate:"required"`
 }
 
 type FundedRawTransactionDTO struct {
@@ -140,6 +147,7 @@ type SignRawTransactionDTO struct {
 		Amount   int64  `json:"amount" validate:"required"`
 		PKScript string `json:"pk_script" validate:"required"`
 	} `json:"utxo" validate:"dive"`
+	Network string `json:"network" validate:"required"`
 }
 
 type SignedRawTransactionDTO struct {
@@ -148,8 +156,14 @@ type SignedRawTransactionDTO struct {
 
 type SendRawTransactionDTO struct {
 	SignedTx string `json:"signed_tx" validate:"required"`
+	Network  string `json:"network" validate:"required"`
 }
 
 type SentRawTransactionDTO struct {
 	TxId string `json:"tx_id"`
+}
+
+type ImportAddressDTO struct {
+	Address string `json:"address" validate:"required"`
+	Network string `json:"network" validate:"required"`
 }

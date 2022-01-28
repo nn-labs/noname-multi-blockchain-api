@@ -6,7 +6,7 @@ import (
 	"math/big"
 )
 
-func GetCurrentFee(client IBtcClient) (*float64, error) {
+func GetCurrentFee(client IBtcClient, network string) (*float64, error) {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "estimatesmartfee",
@@ -28,7 +28,7 @@ func GetCurrentFee(client IBtcClient) (*float64, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body)
+	response, err := client.Send(body, false, network)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -59,8 +59,8 @@ func GetCurrentFee(client IBtcClient) (*float64, error) {
 	return &fee, nil
 }
 
-func GetCurrentFeeRate(client IBtcClient) (*big.Int, error) {
-	fee, err := GetCurrentFee(client)
+func GetCurrentFeeRate(client IBtcClient, network string) (*big.Int, error) {
+	fee, err := GetCurrentFee(client, network)
 	if err != nil {
 		return nil, err
 	}

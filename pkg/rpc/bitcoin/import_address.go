@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func SendTx(client IBtcClient, signedTx, network string) (string, error) {
+func ImportAddress(client IBtcClient, address, network string) error {
 	msg := struct {
 		Result string `json:"result"`
 		Error  struct {
@@ -15,28 +15,28 @@ func SendTx(client IBtcClient, signedTx, network string) (string, error) {
 
 	req := BaseRequest{
 		JsonRpc: "2.0",
-		Method:  "sendrawtransaction",
-		Params:  []interface{}{signedTx},
+		Method:  "importaddress",
+		Params:  []interface{}{address},
 	}
 
 	body, err := client.EncodeBaseRequest(req)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, false, network)
+	response, err := client.Send(body, true, network)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return errors.New(err.Error())
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&msg)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if msg.Error.Message != "" {
-		return "", errors.New(msg.Error.Message)
+		return errors.New(msg.Error.Message)
 	}
 
-	return msg.Result, nil
+	return nil
 }

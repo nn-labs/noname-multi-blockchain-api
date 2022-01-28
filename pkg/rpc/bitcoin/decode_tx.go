@@ -35,7 +35,7 @@ type DecodedTx struct {
 	} `json:"vout"`
 }
 
-func DecodeTx(client IBtcClient, tx string) (*DecodedTx, error) {
+func DecodeTx(client IBtcClient, tx string, network string) (*DecodedTx, error) {
 	msg := struct {
 		Result DecodedTx `json:"result"`
 		Error  struct {
@@ -54,7 +54,7 @@ func DecodeTx(client IBtcClient, tx string) (*DecodedTx, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body)
+	response, err := client.Send(body, false, network)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}

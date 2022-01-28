@@ -24,12 +24,13 @@ type UnspentList struct {
 }
 
 type Service interface {
-	StatusNode(ctx context.Context) (*StatusNodeDTO, error)
+	StatusNode(ctx context.Context, dto *StatusNodeDTO) (*StatusNodeInfoDTO, error)
 	CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error)
 	DecodeTransaction(ctx context.Context, dto *DecodeRawTransactionDTO) (*DecodedRawTransactionDTO, error)
 	FoundForRawTransaction(ctx context.Context, dto *FundForRawTransactionDTO) (*FundedRawTransactionDTO, error)
 	SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error)
 	SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error)
+	ImportAddress(ctx context.Context, dto *ImportAddressDTO) error
 }
 
 type service struct {
@@ -47,14 +48,14 @@ func NewService(log *logrus.Logger, btcClient bitcoin.IBtcClient) (Service, erro
 	return &service{log: log, btcClient: btcClient}, nil
 }
 
-func (svc *service) StatusNode(ctx context.Context) (*StatusNodeDTO, error) {
-	status, err := bitcoin.Status(svc.btcClient)
+func (svc *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*StatusNodeInfoDTO, error) {
+	status, err := bitcoin.Status(svc.btcClient, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf("failed check node status")
 		return nil, errors.NewInternal("failed check node status")
 	}
 
-	return &StatusNodeDTO{
+	return &StatusNodeInfoDTO{
 		Chain:                status.Chain,
 		Blocks:               status.Blocks,
 		Headers:              status.Headers,
@@ -68,7 +69,7 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	chainParams := &chaincfg.TestNet3Params
 
 	// Get fee
-	feeRate, err := bitcoin.GetCurrentFeeRate(svc.btcClient)
+	feeRate, err := bitcoin.GetCurrentFeeRate(svc.btcClient, dto.Network)
 	//log.Printf("%-18s %s\n", "current fee rate:", feeRate)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
@@ -214,7 +215,7 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 }
 
 func (svc *service) DecodeTransaction(ctx context.Context, dto *DecodeRawTransactionDTO) (*DecodedRawTransactionDTO, error) {
-	decodedTx, err := bitcoin.DecodeTx(svc.btcClient, dto.Tx)
+	decodedTx, err := bitcoin.DecodeTx(svc.btcClient, dto.Tx, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())
@@ -234,7 +235,7 @@ func (svc *service) DecodeTransaction(ctx context.Context, dto *DecodeRawTransac
 }
 
 func (svc *service) FoundForRawTransaction(ctx context.Context, dto *FundForRawTransactionDTO) (*FundedRawTransactionDTO, error) {
-	tx, fee, err := bitcoin.FundForRawTransaction(svc.btcClient, dto.CreatedTxHex, dto.ChangeAddress)
+	tx, fee, err := bitcoin.FundForRawTransaction(svc.btcClient, dto.CreatedTxHex, dto.ChangeAddress, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())
@@ -252,7 +253,7 @@ func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransaction
 		utxos = append(utxos, map[string]interface{}{"txid": s.TxId, "vout": s.Vout, "scriptPubKey": s.PKScript, "amount": s.Amount})
 	}
 
-	tx, err := bitcoin.SignTx(svc.btcClient, dto.Tx, dto.PrivateKey, utxos)
+	tx, err := bitcoin.SignTx(svc.btcClient, dto.Tx, dto.PrivateKey, utxos, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())
@@ -264,7 +265,7 @@ func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransaction
 }
 
 func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error) {
-	txId, err := bitcoin.SendTx(svc.btcClient, dto.SignedTx)
+	txId, err := bitcoin.SendTx(svc.btcClient, dto.SignedTx, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())
@@ -273,4 +274,14 @@ func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransaction
 	return &SentRawTransactionDTO{
 		TxId: txId,
 	}, nil
+}
+
+func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) error {
+	err := bitcoin.ImportAddress(svc.btcClient, dto.Address, dto.Network)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return errors.NewInternal(err.Error())
+	}
+
+	return nil
 }

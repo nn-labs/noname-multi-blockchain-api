@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-func SignTx(client IBtcClient, tx, privateKey string, utxos []map[string]interface{}) (string, error) {
+func SignTx(client IBtcClient, tx, privateKey string, utxos []map[string]interface{}, network string) (string, error) {
 	privateKeyArray := []string{privateKey}
 	req := BaseRequest{
 		JsonRpc: "2.0",
@@ -29,7 +29,7 @@ func SignTx(client IBtcClient, tx, privateKey string, utxos []map[string]interfa
 		return "", errors.New(err.Error())
 	}
 
-	response, err := client.Send(body)
+	response, err := client.Send(body, false, network)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}

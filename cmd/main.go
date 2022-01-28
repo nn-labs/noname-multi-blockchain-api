@@ -31,7 +31,7 @@ func main() {
 	}
 
 	// Rpc clients
-	btcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpcEndpoint, cfg.BtcRpcUser, cfg.BtcRpcPassword)
+	btcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpcEndpointTest, cfg.BtcRpcEndpointMain, cfg.BtcRpcUser, cfg.BtcRpcPassword)
 	if err != nil {
 		logger.Fatalf("failed to set-up btc rpc client: %v", err)
 	}
