@@ -30,11 +30,24 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 	router.Post("/send-raw-tx", h.SendRawTransaction)
 
 	// Wallet/Unspent transaction list
+	//router.Post("/create-wallet", h.CreateWallet)
+	router.Post("/load-wallet", h.LoadWallet)
 	router.Post("/import-address", h.ImportAddress)
 }
 
 func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	var dto StatusNodeDTO
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
 
 	status, err := h.btcSvc.StatusNode(context.Background(), &dto)
 	if err != nil {
@@ -159,6 +172,52 @@ func (h *Handler) DecodeRawTransaction(w http.ResponseWriter, r *http.Request) {
 	respond.Respond(w, http.StatusOK, decodedTx)
 }
 
+//func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
+//	var dto CreateWalletDTO
+//
+//	err := json.NewDecoder(r.Body).Decode(&dto)
+//	if err != nil {
+//		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+//		return
+//	}
+//
+//	if err := Validate(dto); err != nil {
+//		respond.Respond(w, errors.HTTPCode(err), err)
+//		return
+//	}
+//
+//	walletId, err := h.btcSvc.CreateWallet(context.Background(), &dto)
+//	if err != nil {
+//		respond.Respond(w, errors.HTTPCode(err), err)
+//		return
+//	}
+//
+//	respond.Respond(w, http.StatusOK, walletId)
+//}
+
+func (h *Handler) LoadWallet(w http.ResponseWriter, r *http.Request) {
+	var dto LoadWalletDTO
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	info, err := h.btcSvc.LoadWaller(context.Background(), &dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, info)
+}
+
 func (h *Handler) ImportAddress(w http.ResponseWriter, r *http.Request) {
 	var dto ImportAddressDTO
 
@@ -173,11 +232,11 @@ func (h *Handler) ImportAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.btcSvc.ImportAddress(context.Background(), &dto)
+	info, err := h.btcSvc.ImportAddress(context.Background(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
 	}
 
-	respond.Respond(w, http.StatusOK, "OK")
+	respond.Respond(w, http.StatusOK, info)
 }

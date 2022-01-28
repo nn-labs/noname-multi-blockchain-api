@@ -5,18 +5,21 @@ import (
 	"errors"
 )
 
-func ImportAddress(client IBtcClient, address, network string) error {
+func LoadWallet(client IBtcClient, network string) error {
 	msg := struct {
-		Result string `json:"result"`
-		Error  struct {
+		Result struct {
+			Name    string `json:"name"`
+			Warning string `json:"warning"`
+		} `json:"result"`
+		Error struct {
 			Message string `json:"message"`
 		} `json:"error"`
 	}{}
 
 	req := BaseRequest{
 		JsonRpc: "2.0",
-		Method:  "importaddress",
-		Params:  []interface{}{address, "", false},
+		Method:  "loadwallet",
+		Params:  []interface{}{"development"},
 	}
 
 	body, err := client.EncodeBaseRequest(req)
@@ -24,7 +27,7 @@ func ImportAddress(client IBtcClient, address, network string) error {
 		return errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, true, network)
+	response, err := client.Send(body, false, network)
 	if err != nil {
 		return errors.New(err.Error())
 	}
@@ -32,6 +35,10 @@ func ImportAddress(client IBtcClient, address, network string) error {
 	err = json.NewDecoder(response.Body).Decode(&msg)
 	if err != nil {
 		return err
+	}
+
+	if msg.Result.Warning != "" {
+		return errors.New(msg.Result.Warning)
 	}
 
 	if msg.Error.Message != "" {

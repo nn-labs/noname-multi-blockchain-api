@@ -25,12 +25,16 @@ type UnspentList struct {
 
 type Service interface {
 	StatusNode(ctx context.Context, dto *StatusNodeDTO) (*StatusNodeInfoDTO, error)
+
 	CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error)
 	DecodeTransaction(ctx context.Context, dto *DecodeRawTransactionDTO) (*DecodedRawTransactionDTO, error)
 	FoundForRawTransaction(ctx context.Context, dto *FundForRawTransactionDTO) (*FundedRawTransactionDTO, error)
 	SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error)
 	SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error)
-	ImportAddress(ctx context.Context, dto *ImportAddressDTO) error
+
+	//CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error)
+	LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWalletInfoDTO, error)
+	ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*ImportAddressInfoDTO, error)
 }
 
 type service struct {
@@ -276,12 +280,36 @@ func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransaction
 	}, nil
 }
 
-func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) error {
+//func (svc *service) CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error) {
+//	walletId, err := bitcoin.CreateWallet(svc.btcClient, dto.Network)
+//	if err != nil {
+//		svc.log.WithContext(ctx).Errorf(err.Error())
+//		return nil, errors.NewInternal(err.Error())
+//	}
+//
+//	return &CreatedWalletInfoDTO{WalletId: walletId}, nil
+//}
+
+func (svc *service) LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWalletInfoDTO, error) {
+	err := bitcoin.LoadWallet(svc.btcClient, dto.Network)
+	if err != nil {
+		svc.log.WithContext(ctx).Errorf(err.Error())
+		return nil, errors.NewInternal(err.Error())
+	}
+
+	return &LoadWalletInfoDTO{
+		Message: "successful",
+	}, nil
+}
+
+func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*ImportAddressInfoDTO, error) {
 	err := bitcoin.ImportAddress(svc.btcClient, dto.Address, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return errors.NewInternal(err.Error())
+		return nil, errors.NewInternal(err.Error())
 	}
 
-	return nil
+	return &ImportAddressInfoDTO{
+		Message: "successful",
+	}, nil
 }

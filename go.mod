@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/cors v1.2.0
 	github.com/go-playground/validator/v10 v10.10.0
 	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0

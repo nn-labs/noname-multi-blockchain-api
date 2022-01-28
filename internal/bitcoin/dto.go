@@ -167,3 +167,25 @@ type ImportAddressDTO struct {
 	Address string `json:"address" validate:"required"`
 	Network string `json:"network" validate:"required"`
 }
+
+type ImportAddressInfoDTO struct {
+	Message string `json:"message"`
+}
+
+type CreateWalletDTO struct {
+	//Password string `json:"password" validate:"required"`
+	Network string `json:"network" validate:"required"`
+}
+
+type CreatedWalletInfoDTO struct {
+	WalletId string `json:"wallet_id"`
+	Password string `json:"password"`
+}
+
+type LoadWalletDTO struct {
+	Network string `json:"network" validate:"required"`
+}
+
+type LoadWalletInfoDTO struct {
+	Message string `json:"message"`
+}
