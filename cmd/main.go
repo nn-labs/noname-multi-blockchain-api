@@ -31,9 +31,23 @@ func main() {
 	}
 
 	// Rpc clients
-	btcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpcEndpointTest, cfg.BtcRpcEndpointMain, cfg.BtcRpcUser, cfg.BtcRpcPassword)
+	btcRpcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpcEndpointTest, cfg.BtcRpcEndpointMain, cfg.BtcRpcUser, cfg.BtcRpcPassword)
 	if err != nil {
 		logger.Fatalf("failed to set-up btc rpc client: %v", err)
+	}
+
+	// Rpc services
+	bitcoinRpcTxSvc, err := bitcoin_rpc.NewTransactionService(btcRpcClient)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin tx service: %v", err)
+	}
+	bitcoinRpcWalletSvc, err := bitcoin_rpc.NewWalletService(btcRpcClient)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin wallet service: %v", err)
+	}
+	bitcoinRpcHealthSvc, err := bitcoin_rpc.NewHealthService(btcRpcClient)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin health service: %v", err)
 	}
 
 	// Set-up Route
@@ -55,7 +69,7 @@ func main() {
 		logger.Fatalf("failed to create wallet service: %v", err)
 	}
 
-	bitcoinSvc, err := bitcoin.NewService(logger, btcClient)
+	bitcoinSvc, err := bitcoin.NewService(logger, bitcoinRpcTxSvc, bitcoinRpcWalletSvc, bitcoinRpcHealthSvc)
 	if err != nil {
 		logger.Fatalf("failed to create bitcoin service: %v", err)
 	}

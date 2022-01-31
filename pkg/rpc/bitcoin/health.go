@@ -2,8 +2,10 @@ package bitcoin
 
 import (
 	"encoding/json"
-	"errors"
+	"nn-blockchain-api/pkg/errors"
 )
+
+//go:generate mockgen -source=health.go -destination=mocks/health_mock.go
 
 type StatusNode struct {
 	Chain                string      `json:"chain"`
@@ -53,7 +55,22 @@ type StatusNode struct {
 	Warnings string `json:"warnings"`
 }
 
-func Status(client IBtcClient, network string) (*StatusNode, error) {
+type HealthService interface {
+	Status(network string) (*StatusNode, error)
+}
+
+type healthService struct {
+	btcClient IBtcClient
+}
+
+func NewHealthService(btcClient IBtcClient) (HealthService, error) {
+	if btcClient == nil {
+		return nil, errors.NewInternal("invalid btc client")
+	}
+	return &healthService{btcClient: btcClient}, nil
+}
+
+func (svc *healthService) Status(network string) (*StatusNode, error) {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "getblockchaininfo",
@@ -68,14 +85,14 @@ func Status(client IBtcClient, network string) (*StatusNode, error) {
 		} `json:"error"`
 	}{}
 
-	body, err := client.EncodeBaseRequest(req)
+	body, err := svc.btcClient.EncodeBaseRequest(req)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, err
 	}
 
-	response, err := client.Send(body, "", network)
+	response, err := svc.btcClient.Send(body, "", network)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, err
 	}
 
 	defer response.Body.Close()
@@ -86,7 +103,7 @@ func Status(client IBtcClient, network string) (*StatusNode, error) {
 	}
 
 	if msg.Error.Message != "" {
-		return nil, errors.New(msg.Error.Message)
+		return nil, errors.NewInternal(msg.Error.Message)
 	}
 
 	return &msg.Result, nil

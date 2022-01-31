@@ -83,6 +83,29 @@ func (h *Handler) CreateRawTransaction(w http.ResponseWriter, r *http.Request) {
 	respond.Respond(w, http.StatusOK, transaction)
 }
 
+func (h *Handler) DecodeRawTransaction(w http.ResponseWriter, r *http.Request) {
+	var dto DecodeRawTransactionDTO
+
+	err := json.NewDecoder(r.Body).Decode(&dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
+		return
+	}
+
+	if err := Validate(dto); err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	decodedTx, err := h.btcSvc.DecodeTransaction(context.Background(), &dto)
+	if err != nil {
+		respond.Respond(w, errors.HTTPCode(err), err)
+		return
+	}
+
+	respond.Respond(w, http.StatusOK, decodedTx)
+}
+
 func (h *Handler) FundForRawTransaction(w http.ResponseWriter, r *http.Request) {
 	var dto FundForRawTransactionDTO
 
@@ -150,29 +173,6 @@ func (h *Handler) SendRawTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respond.Respond(w, http.StatusOK, transactionId)
-}
-
-func (h *Handler) DecodeRawTransaction(w http.ResponseWriter, r *http.Request) {
-	var dto DecodeRawTransactionDTO
-
-	err := json.NewDecoder(r.Body).Decode(&dto)
-	if err != nil {
-		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
-		return
-	}
-
-	if err := Validate(dto); err != nil {
-		respond.Respond(w, errors.HTTPCode(err), err)
-		return
-	}
-
-	decodedTx, err := h.btcSvc.DecodeTransaction(context.Background(), &dto)
-	if err != nil {
-		respond.Respond(w, errors.HTTPCode(err), err)
-		return
-	}
-
-	respond.Respond(w, http.StatusOK, decodedTx)
 }
 
 func (h *Handler) WalletInfo(w http.ResponseWriter, r *http.Request) {
