@@ -51,13 +51,15 @@ type DecodedTx struct {
 	} `json:"vout"`
 }
 
+type UTXO []struct {
+	TxId     string
+	Vout     int64
+	Amount   int64
+	PKScript string
+}
+
 type TransactionService interface {
-	CreateTransaction(utxos []struct {
-		TxId     string
-		Vout     int64
-		Amount   int64
-		PKScript string
-	}, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error)
+	CreateTransaction(utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error)
 	//CreateTransaction(inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error)
 	DecodeTransaction(tx string, network string) (*DecodedTx, error)
 	FundForTransaction(createdTx, changeAddress, network string) (string, *float64, error)
@@ -114,12 +116,7 @@ func NewTransactionService(btcClient IBtcClient) (TransactionService, error) {
 //	return msg.Result, nil
 //}
 
-func (svc *transactionService) CreateTransaction(utxos []struct {
-	TxId     string
-	Vout     int64
-	Amount   int64
-	PKScript string
-}, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error) {
+func (svc *transactionService) CreateTransaction(utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error) {
 	chainParams := &chaincfg.TestNet3Params
 
 	// Get fee

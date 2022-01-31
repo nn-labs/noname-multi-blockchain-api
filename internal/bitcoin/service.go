@@ -50,7 +50,7 @@ func NewService(log *logrus.Logger, btcTxSvc bitcoin.TransactionService, btcWall
 		return nil, errors.NewInternal("invalid btc wallet service")
 	}
 	if btcHealthSvc == nil {
-		return nil, errors.NewInternal("invalid btc wallet service")
+		return nil, errors.NewInternal("invalid btc health service")
 	}
 	return &service{log: log, btcTxSvc: btcTxSvc, btcWalletSvc: btcWalletSvc, btcHealthSvc: btcHealthSvc}, nil
 }
@@ -73,12 +73,7 @@ func (svc *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*Status
 }
 
 func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error) {
-	tx, fee, err := svc.btcTxSvc.CreateTransaction([]struct {
-		TxId     string
-		Vout     int64
-		Amount   int64
-		PKScript string
-	}(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
+	tx, fee, err := svc.btcTxSvc.CreateTransaction(bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())

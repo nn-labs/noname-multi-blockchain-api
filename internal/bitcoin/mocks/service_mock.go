@@ -50,6 +50,36 @@ func (mr *MockServiceMockRecorder) CreateTransaction(ctx, dto interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTransaction", reflect.TypeOf((*MockService)(nil).CreateTransaction), ctx, dto)
 }
 
+// CreateWallet mocks base method.
+func (m *MockService) CreateWallet(ctx context.Context, dto *bitcoin.CreateWalletDTO) (*bitcoin.CreatedWalletInfoDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateWallet", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.CreatedWalletInfoDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateWallet indicates an expected call of CreateWallet.
+func (mr *MockServiceMockRecorder) CreateWallet(ctx, dto interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateWallet", reflect.TypeOf((*MockService)(nil).CreateWallet), ctx, dto)
+}
+
+// DecodeTransaction mocks base method.
+func (m *MockService) DecodeTransaction(ctx context.Context, dto *bitcoin.DecodeRawTransactionDTO) (*bitcoin.DecodedRawTransactionDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DecodeTransaction", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.DecodedRawTransactionDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DecodeTransaction indicates an expected call of DecodeTransaction.
+func (mr *MockServiceMockRecorder) DecodeTransaction(ctx, dto interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecodeTransaction", reflect.TypeOf((*MockService)(nil).DecodeTransaction), ctx, dto)
+}
+
 // FoundForRawTransaction mocks base method.
 func (m *MockService) FoundForRawTransaction(ctx context.Context, dto *bitcoin.FundForRawTransactionDTO) (*bitcoin.FundedRawTransactionDTO, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +93,66 @@ func (m *MockService) FoundForRawTransaction(ctx context.Context, dto *bitcoin.F
 func (mr *MockServiceMockRecorder) FoundForRawTransaction(ctx, dto interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FoundForRawTransaction", reflect.TypeOf((*MockService)(nil).FoundForRawTransaction), ctx, dto)
+}
+
+// ImportAddress mocks base method.
+func (m *MockService) ImportAddress(ctx context.Context, dto *bitcoin.ImportAddressDTO) (*bitcoin.ImportAddressInfoDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ImportAddress", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.ImportAddressInfoDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ImportAddress indicates an expected call of ImportAddress.
+func (mr *MockServiceMockRecorder) ImportAddress(ctx, dto interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ImportAddress", reflect.TypeOf((*MockService)(nil).ImportAddress), ctx, dto)
+}
+
+// ListUnspent mocks base method.
+func (m *MockService) ListUnspent(ctx context.Context, dto *bitcoin.ListUnspentDTO) (*bitcoin.ListUnspentInfoDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListUnspent", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.ListUnspentInfoDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListUnspent indicates an expected call of ListUnspent.
+func (mr *MockServiceMockRecorder) ListUnspent(ctx, dto interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListUnspent", reflect.TypeOf((*MockService)(nil).ListUnspent), ctx, dto)
+}
+
+// LoadWaller mocks base method.
+func (m *MockService) LoadWaller(ctx context.Context, dto *bitcoin.LoadWalletDTO) (*bitcoin.LoadWalletInfoDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LoadWaller", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.LoadWalletInfoDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadWaller indicates an expected call of LoadWaller.
+func (mr *MockServiceMockRecorder) LoadWaller(ctx, dto interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadWaller", reflect.TypeOf((*MockService)(nil).LoadWaller), ctx, dto)
+}
+
+// RescanWallet mocks base method.
+func (m *MockService) RescanWallet(ctx context.Context, dto *bitcoin.RescanWalletDTO) (*bitcoin.RescanWalletInfoDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RescanWallet", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.RescanWalletInfoDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RescanWallet indicates an expected call of RescanWallet.
+func (mr *MockServiceMockRecorder) RescanWallet(ctx, dto interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RescanWallet", reflect.TypeOf((*MockService)(nil).RescanWallet), ctx, dto)
 }
 
 // SendTransaction mocks base method.
@@ -96,16 +186,31 @@ func (mr *MockServiceMockRecorder) SignTransaction(ctx, dto interface{}) *gomock
 }
 
 // StatusNode mocks base method.
-func (m *MockService) StatusNode(ctx context.Context) (*bitcoin.StatusNodeDTO, error) {
+func (m *MockService) StatusNode(ctx context.Context, dto *bitcoin.StatusNodeDTO) (*bitcoin.StatusNodeInfoDTO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StatusNode", ctx)
-	ret0, _ := ret[0].(*bitcoin.StatusNodeDTO)
+	ret := m.ctrl.Call(m, "StatusNode", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.StatusNodeInfoDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // StatusNode indicates an expected call of StatusNode.
-func (mr *MockServiceMockRecorder) StatusNode(ctx interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) StatusNode(ctx, dto interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatusNode", reflect.TypeOf((*MockService)(nil).StatusNode), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StatusNode", reflect.TypeOf((*MockService)(nil).StatusNode), ctx, dto)
+}
+
+// WalletInfo mocks base method.
+func (m *MockService) WalletInfo(ctx context.Context, dto *bitcoin.WalletDTO) (*bitcoin.WalletInfoDTO, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WalletInfo", ctx, dto)
+	ret0, _ := ret[0].(*bitcoin.WalletInfoDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WalletInfo indicates an expected call of WalletInfo.
+func (mr *MockServiceMockRecorder) WalletInfo(ctx, dto interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WalletInfo", reflect.TypeOf((*MockService)(nil).WalletInfo), ctx, dto)
 }
