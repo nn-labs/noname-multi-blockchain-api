@@ -457,3 +457,65 @@ func TestService_DecodeTransaction(t *testing.T) {
 		})
 	}
 }
+
+func TestService_FoundForRawTransaction(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &FundForRawTransactionDTO{
+		CreatedTxHex:  "tx",
+		ChangeAddress: "address",
+		Network:       "test",
+	}
+
+	tx := "transaction"
+	fee := 0.0000259
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *FundForRawTransactionDTO
+		setup  func(dto *FundForRawTransactionDTO)
+		expect func(t *testing.T, createdTx *FundedRawTransactionDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *FundForRawTransactionDTO) {
+				btcTxSvc.EXPECT().FundForTransaction(dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return(tx, &fee, nil)
+			},
+			expect: func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, fundedTx.Tx, tx)
+				assert.Equal(t, fundedTx.Fee, fee)
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *FundForRawTransactionDTO) {
+				btcTxSvc.EXPECT().FundForTransaction(dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return("", nil, errors.NewInternal("failed to fund for transaction"))
+			},
+			expect: func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error) {
+				assert.Nil(t, fundedTx)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to fund for transaction"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.FoundForRawTransaction(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
