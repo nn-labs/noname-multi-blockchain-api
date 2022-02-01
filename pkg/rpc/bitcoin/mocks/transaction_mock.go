@@ -97,7 +97,7 @@ func (mr *MockTransactionServiceMockRecorder) SendTransaction(signedTx, network 
 }
 
 // SignTransaction mocks base method.
-func (m *MockTransactionService) SignTransaction(tx, privateKey string, utxos []map[string]interface{}, network string) (string, error) {
+func (m *MockTransactionService) SignTransaction(tx, privateKey string, utxos bitcoin.UTXO, network string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SignTransaction", tx, privateKey, utxos, network)
 	ret0, _ := ret[0].(string)

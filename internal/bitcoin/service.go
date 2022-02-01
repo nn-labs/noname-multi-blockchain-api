@@ -119,12 +119,12 @@ func (svc *service) FoundForRawTransaction(ctx context.Context, dto *FundForRawT
 }
 
 func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error) {
-	var utxos []map[string]interface{}
-	for _, s := range dto.Utxo {
-		utxos = append(utxos, map[string]interface{}{"txid": s.TxId, "vout": s.Vout, "scriptPubKey": s.PKScript, "amount": s.Amount})
-	}
+	//var utxos []map[string]interface{}
+	//for _, s := range dto.Utxo {
+	//	utxos = append(utxos, map[string]interface{}{"txid": s.TxId, "vout": s.Vout, "scriptPubKey": s.PKScript, "amount": s.Amount})
+	//}
 
-	tx, err := svc.btcTxSvc.SignTransaction(dto.Tx, dto.PrivateKey, utxos, dto.Network)
+	tx, err := svc.btcTxSvc.SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.NewInternal(err.Error())

@@ -63,7 +63,7 @@ type TransactionService interface {
 	//CreateTransaction(inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error)
 	DecodeTransaction(tx string, network string) (*DecodedTx, error)
 	FundForTransaction(createdTx, changeAddress, network string) (string, *float64, error)
-	SignTransaction(tx, privateKey string, utxos []map[string]interface{}, network string) (string, error)
+	SignTransaction(tx, privateKey string, utxos UTXO, network string) (string, error)
 	SendTransaction(signedTx, network string) (string, error)
 }
 
@@ -355,7 +355,7 @@ func (svc *transactionService) FundForTransaction(createdTx, changeAddress, netw
 	return msg.Result.Hex, &msg.Result.Fee, nil
 }
 
-func (svc *transactionService) SignTransaction(tx, privateKey string, utxos []map[string]interface{}, network string) (string, error) {
+func (svc *transactionService) SignTransaction(tx, privateKey string, utxos UTXO, network string) (string, error) {
 	privateKeyArray := []string{privateKey}
 	req := BaseRequest{
 		JsonRpc: "2.0",

@@ -420,7 +420,7 @@ func TestService_DecodeTransaction(t *testing.T) {
 		ctx    context.Context
 		dto    *DecodeRawTransactionDTO
 		setup  func(dto *DecodeRawTransactionDTO)
-		expect func(t *testing.T, createdTx *DecodedRawTransactionDTO, err error)
+		expect func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
@@ -482,7 +482,7 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 		ctx    context.Context
 		dto    *FundForRawTransactionDTO
 		setup  func(dto *FundForRawTransactionDTO)
-		expect func(t *testing.T, createdTx *FundedRawTransactionDTO, err error)
+		expect func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
@@ -515,6 +515,507 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.setup(tc.dto)
 			w, err := service.FoundForRawTransaction(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_SignTransaction(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &SignRawTransactionDTO{
+		Tx:         "tx",
+		PrivateKey: "private",
+		Utxo: []struct {
+			TxId     string `json:"txid" validate:"required"`
+			Vout     int64  `json:"vout" validate:"required"`
+			Amount   int64  `json:"amount" validate:"required"`
+			PKScript string `json:"pk_script" validate:"required"`
+		}{
+			{
+				TxId:     "989d301c546841d0ac5c8354c7d78079e3603b089682d1639b2ee1c1a8010c6a",
+				Vout:     1,
+				Amount:   1045428,
+				PKScript: "76a914690cd6356789d30b99063632e0651a8d0c206c7f88ac",
+			},
+		},
+		Network: "test",
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *SignRawTransactionDTO
+		setup  func(dto *SignRawTransactionDTO)
+		expect func(t *testing.T, signedTx *SignedRawTransactionDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *SignRawTransactionDTO) {
+				btcTxSvc.EXPECT().SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("hash", nil)
+			},
+			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, signedTx.Hash, "hash")
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *SignRawTransactionDTO) {
+				btcTxSvc.EXPECT().SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("", errors.NewInternal("failed to sign transaction"))
+			},
+			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
+				assert.Nil(t, signedTx)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to sign transaction"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.SignTransaction(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_SendTransaction(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &SendRawTransactionDTO{
+		SignedTx: "hash",
+		Network:  "test",
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *SendRawTransactionDTO
+		setup  func(dto *SendRawTransactionDTO)
+		expect func(t *testing.T, sentTx *SentRawTransactionDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *SendRawTransactionDTO) {
+				btcTxSvc.EXPECT().SendTransaction(dto.SignedTx, dto.Network).Return("tx_id", nil)
+			},
+			expect: func(t *testing.T, sentTx *SentRawTransactionDTO, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, sentTx.TxId, "tx_id")
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *SendRawTransactionDTO) {
+				btcTxSvc.EXPECT().SendTransaction(dto.SignedTx, dto.Network).Return("", errors.NewInternal("failed to send transaction"))
+			},
+			expect: func(t *testing.T, sentTx *SentRawTransactionDTO, err error) {
+				assert.Nil(t, sentTx)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to send transaction"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.SendTransaction(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_WalletInfo(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &WalletDTO{
+		WalletId: "wallet_id",
+		Network:  "test",
+	}
+
+	info := &bitcoin.Info{
+		Walletname:            "wallet_id",
+		Walletversion:         0,
+		Format:                "format",
+		Balance:               0,
+		UnconfirmedBalance:    0,
+		ImmatureBalance:       0,
+		Txcount:               0,
+		Keypoololdest:         0,
+		Keypoolsize:           0,
+		Hdseedid:              "seed",
+		KeypoolsizeHdInternal: 0,
+		Paytxfee:              0,
+		PrivateKeysEnabled:    false,
+		AvoidReuse:            false,
+		Scanning:              false,
+		Descriptors:           false,
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *WalletDTO
+		setup  func(dto *WalletDTO)
+		expect func(t *testing.T, walletInfo *WalletInfoDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *WalletDTO) {
+				btcWalletSvc.EXPECT().WalletInfo(dto.WalletId, dto.Network).Return(info, nil)
+			},
+			expect: func(t *testing.T, walletInfo *WalletInfoDTO, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, walletInfo.Walletname, dto.WalletId)
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *WalletDTO) {
+				btcWalletSvc.EXPECT().WalletInfo(dto.WalletId, dto.Network).Return(nil, errors.NewInternal("failed to get wallet info"))
+			},
+			expect: func(t *testing.T, walletInfo *WalletInfoDTO, err error) {
+				assert.Nil(t, walletInfo)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to get wallet info"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.WalletInfo(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_CreateWallet(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &CreateWalletDTO{
+		Network: "test",
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *CreateWalletDTO
+		setup  func(dto *CreateWalletDTO)
+		expect func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *CreateWalletDTO) {
+				btcWalletSvc.EXPECT().CreateWallet(dto.Network).Return("wallet_id", nil)
+			},
+			expect: func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error) {
+				assert.Nil(t, err)
+				assert.Equal(t, createdWallet.WalletId, "wallet_id")
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *CreateWalletDTO) {
+				btcWalletSvc.EXPECT().CreateWallet(dto.Network).Return("", errors.NewInternal("failed to create wallet"))
+			},
+			expect: func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error) {
+				assert.Nil(t, createdWallet)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to create wallet"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.CreateWallet(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_LoadWaller(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &LoadWalletDTO{
+		WalletId: "wallet_id",
+		Network:  "test",
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *LoadWalletDTO
+		setup  func(dto *LoadWalletDTO)
+		expect func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *LoadWalletDTO) {
+				btcWalletSvc.EXPECT().LoadWallet(dto.WalletId, dto.Network).Return(nil)
+			},
+			expect: func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error) {
+				assert.Nil(t, err)
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *LoadWalletDTO) {
+				btcWalletSvc.EXPECT().LoadWallet(dto.WalletId, dto.Network).Return(errors.NewInternal("failed to load wallet"))
+			},
+			expect: func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error) {
+				assert.Nil(t, loadedWallet)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to load wallet"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.LoadWaller(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_ImportAddress(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &ImportAddressDTO{
+		Address:  "address",
+		WalletId: "wallet_id",
+		Network:  "test",
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *ImportAddressDTO
+		setup  func(dto *ImportAddressDTO)
+		expect func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *ImportAddressDTO) {
+				btcWalletSvc.EXPECT().ImportAddress(dto.Address, dto.WalletId, dto.Network).Return(nil)
+			},
+			expect: func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error) {
+				assert.Nil(t, err)
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *ImportAddressDTO) {
+				btcWalletSvc.EXPECT().ImportAddress(dto.Address, dto.WalletId, dto.Network).Return(errors.NewInternal("failed to import address"))
+			},
+			expect: func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error) {
+				assert.Nil(t, importedAddress)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to import address"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.ImportAddress(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_RescanWallet(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &RescanWalletDTO{
+		WalletId: "wallet_id",
+		Network:  "test",
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *RescanWalletDTO
+		setup  func(dto *RescanWalletDTO)
+		expect func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *RescanWalletDTO) {
+				btcWalletSvc.EXPECT().RescanWallet(dto.WalletId, dto.Network).Return(nil)
+			},
+			expect: func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error) {
+				assert.Nil(t, err)
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *RescanWalletDTO) {
+				btcWalletSvc.EXPECT().RescanWallet(dto.WalletId, dto.Network).Return(errors.NewInternal("failed to rescan wallet"))
+			},
+			expect: func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error) {
+				assert.Nil(t, rescanInfo)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to rescan wallet"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.RescanWallet(tc.ctx, tc.dto)
+			tc.expect(t, w, err)
+		})
+	}
+}
+
+func TestService_ListUnspent(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	btcTxSvc := mock_bitcoin.NewMockTransactionService(controller)
+	btcWalletSvc := mock_bitcoin.NewMockWalletService(controller)
+	btcHealthSvc := mock_bitcoin.NewMockHealthService(controller)
+
+	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
+
+	dto := &ListUnspentDTO{
+		Address:  "address",
+		WalletId: "wallet_id",
+		Network:  "test",
+	}
+
+	listUTXO := []*bitcoin.Unspent{
+		{
+			Txid:          "tx_id",
+			Vout:          1,
+			Address:       "address",
+			Label:         "label",
+			ScriptPubKey:  "pkScript",
+			Amount:        0.001,
+			Confirmations: 4,
+			Spendable:     false,
+			Solvable:      false,
+			Safe:          true,
+		},
+	}
+
+	tests := []struct {
+		name   string
+		ctx    context.Context
+		dto    *ListUnspentDTO
+		setup  func(dto *ListUnspentDTO)
+		expect func(t *testing.T, listUTXO *ListUnspentInfoDTO, err error)
+	}{
+		{
+			name: "should return ok",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *ListUnspentDTO) {
+				btcWalletSvc.EXPECT().ListUnspent(dto.Address, dto.WalletId, dto.Network).Return(listUTXO, nil)
+			},
+			expect: func(t *testing.T, utxoInfo *ListUnspentInfoDTO, err error) {
+				assert.Nil(t, err)
+			},
+		},
+		{
+			name: "should return error",
+			ctx:  context.Background(),
+			dto:  dto,
+			setup: func(dto *ListUnspentDTO) {
+				btcWalletSvc.EXPECT().ListUnspent(dto.Address, dto.WalletId, dto.Network).Return(nil, errors.NewInternal("failed to get unspent list"))
+			},
+			expect: func(t *testing.T, utxoInfo *ListUnspentInfoDTO, err error) {
+				assert.Nil(t, utxoInfo)
+				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to get unspent list"))
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.setup(tc.dto)
+			w, err := service.ListUnspent(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
 	}
