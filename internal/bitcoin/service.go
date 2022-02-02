@@ -59,7 +59,7 @@ func (svc *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*Status
 	status, err := svc.btcHealthSvc.Status(dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf("failed check node status")
-		return nil, errors.NewInternal("failed check node status")
+		return nil, errors.WithMessage(ErrFailedGetStatusNode, err.Error())
 	}
 
 	return &StatusNodeInfoDTO{
@@ -76,7 +76,7 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	tx, fee, err := svc.btcTxSvc.CreateTransaction(bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedCreateTx, err.Error())
 	}
 
 	return &CreatedRawTransactionDTO{
@@ -89,7 +89,7 @@ func (svc *service) DecodeTransaction(ctx context.Context, dto *DecodeRawTransac
 	decodedTx, err := svc.btcTxSvc.DecodeTransaction(dto.Tx, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedDecodeTx, err.Error())
 	}
 
 	return &DecodedRawTransactionDTO{
@@ -109,7 +109,7 @@ func (svc *service) FoundForRawTransaction(ctx context.Context, dto *FundForRawT
 	tx, fee, err := svc.btcTxSvc.FundForTransaction(dto.CreatedTxHex, dto.ChangeAddress, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedFundForTx, err.Error())
 	}
 
 	return &FundedRawTransactionDTO{
@@ -127,7 +127,7 @@ func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransaction
 	tx, err := svc.btcTxSvc.SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedSignTx, err.Error())
 	}
 
 	return &SignedRawTransactionDTO{
@@ -139,7 +139,7 @@ func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransaction
 	txId, err := svc.btcTxSvc.SendTransaction(dto.SignedTx, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedSendTx, err.Error())
 	}
 
 	return &SentRawTransactionDTO{
@@ -151,7 +151,7 @@ func (svc *service) WalletInfo(ctx context.Context, dto *WalletDTO) (*WalletInfo
 	info, err := svc.btcWalletSvc.WalletInfo(dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedGetWalletInfo, err.Error())
 	}
 
 	return &WalletInfoDTO{
@@ -178,7 +178,7 @@ func (svc *service) CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*Cr
 	walletId, err := svc.btcWalletSvc.CreateWallet(dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedCreateWallet, err.Error())
 	}
 
 	return &CreatedWalletInfoDTO{WalletId: walletId}, nil
@@ -188,7 +188,7 @@ func (svc *service) LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWa
 	err := svc.btcWalletSvc.LoadWallet(dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedLoadWallet, err.Error())
 	}
 
 	return &LoadWalletInfoDTO{
@@ -200,7 +200,7 @@ func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*
 	err := svc.btcWalletSvc.ImportAddress(dto.Address, dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedImportAddress, err.Error())
 	}
 
 	return &ImportAddressInfoDTO{
@@ -212,7 +212,7 @@ func (svc *service) RescanWallet(ctx context.Context, dto *RescanWalletDTO) (*Re
 	err := svc.btcWalletSvc.RescanWallet(dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedRescanWallet, err.Error())
 	}
 
 	return &RescanWalletInfoDTO{
@@ -225,7 +225,7 @@ func (svc *service) ListUnspent(ctx context.Context, dto *ListUnspentDTO) (*List
 	list, err := svc.btcWalletSvc.ListUnspent(dto.Address, dto.WalletId, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.NewInternal(err.Error())
+		return nil, errors.WithMessage(ErrFailedGetUnspent, err.Error())
 	}
 
 	var result []*UnspentInfoDTO

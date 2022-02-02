@@ -248,11 +248,11 @@ func TestService_StatusNode(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *StatusNodeDTO) {
-				btcHealthSvc.EXPECT().Status(dto.Network).Return(nil, errors.NewInternal("failed check node status"))
+				btcHealthSvc.EXPECT().Status(dto.Network).Return(nil, ErrFailedGetStatusNode)
 			},
 			expect: func(t *testing.T, status *StatusNodeInfoDTO, err error) {
 				assert.NotNil(t, err)
-				assert.Equal(t, err, errors.NewInternal("failed check node status"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedGetStatusNode, ErrFailedGetStatusNode.Error()))
 			},
 		},
 	}
@@ -324,11 +324,11 @@ func TestService_CreateTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *CreateRawTransactionDTO) {
-				btcTxSvc.EXPECT().CreateTransaction(bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, errors.NewInternal("failed to create transaction"))
+				btcTxSvc.EXPECT().CreateTransaction(bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, ErrFailedCreateTx)
 			},
 			expect: func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error) {
 				assert.Nil(t, createdTx)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to create transaction"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedCreateTx, ErrFailedCreateTx.Error()))
 			},
 		},
 	}
@@ -439,12 +439,11 @@ func TestService_DecodeTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *DecodeRawTransactionDTO) {
-				btcTxSvc.EXPECT().DecodeTransaction(dto.Tx, dto.Network).Return(nil, errors.NewInternal("failed to decode transaction"))
+				btcTxSvc.EXPECT().DecodeTransaction(dto.Tx, dto.Network).Return(nil, ErrFailedDecodeTx)
 			},
 			expect: func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error) {
 				assert.Nil(t, decodeTx)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to decode transaction"))
-
+				assert.Equal(t, err, errors.WithMessage(ErrFailedDecodeTx, ErrFailedDecodeTx.Error()))
 			},
 		},
 	}
@@ -502,11 +501,11 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *FundForRawTransactionDTO) {
-				btcTxSvc.EXPECT().FundForTransaction(dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return("", nil, errors.NewInternal("failed to fund for transaction"))
+				btcTxSvc.EXPECT().FundForTransaction(dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return("", nil, ErrFailedFundForTx)
 			},
 			expect: func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error) {
 				assert.Nil(t, fundedTx)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to fund for transaction"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedFundForTx, ErrFailedFundForTx.Error()))
 			},
 		},
 	}
@@ -573,11 +572,11 @@ func TestService_SignTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *SignRawTransactionDTO) {
-				btcTxSvc.EXPECT().SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("", errors.NewInternal("failed to sign transaction"))
+				btcTxSvc.EXPECT().SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("", ErrFailedSignTx)
 			},
 			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
 				assert.Nil(t, signedTx)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to sign transaction"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedSignTx, ErrFailedSignTx.Error()))
 			},
 		},
 	}
@@ -630,11 +629,11 @@ func TestService_SendTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *SendRawTransactionDTO) {
-				btcTxSvc.EXPECT().SendTransaction(dto.SignedTx, dto.Network).Return("", errors.NewInternal("failed to send transaction"))
+				btcTxSvc.EXPECT().SendTransaction(dto.SignedTx, dto.Network).Return("", ErrFailedSendTx)
 			},
 			expect: func(t *testing.T, sentTx *SentRawTransactionDTO, err error) {
 				assert.Nil(t, sentTx)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to send transaction"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedSendTx, ErrFailedSendTx.Error()))
 			},
 		},
 	}
@@ -706,11 +705,11 @@ func TestService_WalletInfo(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *WalletDTO) {
-				btcWalletSvc.EXPECT().WalletInfo(dto.WalletId, dto.Network).Return(nil, errors.NewInternal("failed to get wallet info"))
+				btcWalletSvc.EXPECT().WalletInfo(dto.WalletId, dto.Network).Return(nil, ErrFailedGetWalletInfo)
 			},
 			expect: func(t *testing.T, walletInfo *WalletInfoDTO, err error) {
 				assert.Nil(t, walletInfo)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to get wallet info"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedGetWalletInfo, ErrFailedGetWalletInfo.Error()))
 			},
 		},
 	}
@@ -762,11 +761,11 @@ func TestService_CreateWallet(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *CreateWalletDTO) {
-				btcWalletSvc.EXPECT().CreateWallet(dto.Network).Return("", errors.NewInternal("failed to create wallet"))
+				btcWalletSvc.EXPECT().CreateWallet(dto.Network).Return("", ErrFailedCreateWallet)
 			},
 			expect: func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error) {
 				assert.Nil(t, createdWallet)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to create wallet"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedCreateWallet, ErrFailedCreateWallet.Error()))
 			},
 		},
 	}
@@ -818,11 +817,11 @@ func TestService_LoadWaller(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *LoadWalletDTO) {
-				btcWalletSvc.EXPECT().LoadWallet(dto.WalletId, dto.Network).Return(errors.NewInternal("failed to load wallet"))
+				btcWalletSvc.EXPECT().LoadWallet(dto.WalletId, dto.Network).Return(ErrFailedLoadWallet)
 			},
 			expect: func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error) {
 				assert.Nil(t, loadedWallet)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to load wallet"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedLoadWallet, ErrFailedLoadWallet.Error()))
 			},
 		},
 	}
@@ -875,11 +874,11 @@ func TestService_ImportAddress(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *ImportAddressDTO) {
-				btcWalletSvc.EXPECT().ImportAddress(dto.Address, dto.WalletId, dto.Network).Return(errors.NewInternal("failed to import address"))
+				btcWalletSvc.EXPECT().ImportAddress(dto.Address, dto.WalletId, dto.Network).Return(ErrFailedImportAddress)
 			},
 			expect: func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error) {
 				assert.Nil(t, importedAddress)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to import address"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedImportAddress, ErrFailedImportAddress.Error()))
 			},
 		},
 	}
@@ -931,11 +930,11 @@ func TestService_RescanWallet(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *RescanWalletDTO) {
-				btcWalletSvc.EXPECT().RescanWallet(dto.WalletId, dto.Network).Return(errors.NewInternal("failed to rescan wallet"))
+				btcWalletSvc.EXPECT().RescanWallet(dto.WalletId, dto.Network).Return(ErrFailedRescanWallet)
 			},
 			expect: func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error) {
 				assert.Nil(t, rescanInfo)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to rescan wallet"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedRescanWallet, ErrFailedRescanWallet.Error()))
 			},
 		},
 	}
@@ -1003,11 +1002,11 @@ func TestService_ListUnspent(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(dto *ListUnspentDTO) {
-				btcWalletSvc.EXPECT().ListUnspent(dto.Address, dto.WalletId, dto.Network).Return(nil, errors.NewInternal("failed to get unspent list"))
+				btcWalletSvc.EXPECT().ListUnspent(dto.Address, dto.WalletId, dto.Network).Return(nil, ErrFailedGetUnspent)
 			},
 			expect: func(t *testing.T, utxoInfo *ListUnspentInfoDTO, err error) {
 				assert.Nil(t, utxoInfo)
-				assert.Equal(t, err, errors.WithMessage(err, "code: 500; status: internal_error; message: failed to get unspent list"))
+				assert.Equal(t, err, errors.WithMessage(ErrFailedGetUnspent, ErrFailedGetUnspent.Error()))
 			},
 		},
 	}
