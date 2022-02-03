@@ -8,9 +8,13 @@ import (
 
 func TestInit(t *testing.T) {
 	type env struct {
-		port        string
-		environment string
-		gRpcHost    string
+		port               string
+		environment        string
+		gRpcHost           string
+		btcRpcEndpointTest string
+		btcRpcEndpointMain string
+		btcRpcUser         string
+		btcRpcPassword     string
 	}
 
 	type args struct {
@@ -21,6 +25,10 @@ func TestInit(t *testing.T) {
 		os.Setenv("PORT", env.port)
 		os.Setenv("ENVIRONMENT", env.environment)
 		os.Setenv("GRPC_HOST", env.gRpcHost)
+		os.Setenv("BTC_RPC_ENDPOINT_TEST", env.btcRpcEndpointTest)
+		os.Setenv("BTC_RPC_ENDPOINT_MAIN", env.btcRpcEndpointMain)
+		os.Setenv("BTC_RPC_USER", env.btcRpcUser)
+		os.Setenv("BTC_RPC_PASSWORD", env.btcRpcPassword)
 	}
 
 	tests := []struct {
@@ -33,15 +41,23 @@ func TestInit(t *testing.T) {
 			name: "Test config file!",
 			args: args{
 				env: env{
-					port:        ":5000",
-					environment: "development",
-					gRpcHost:    "localhost:123321",
+					port:               ":5000",
+					environment:        "development",
+					gRpcHost:           "localhost:123321",
+					btcRpcEndpointTest: "http://localhost",
+					btcRpcEndpointMain: "http://localhost",
+					btcRpcUser:         "user",
+					btcRpcPassword:     "password",
 				},
 			},
 			want: &Config{
-				PORT:        ":5000",
-				Environment: "development",
-				GRpcHost:    "localhost:123321",
+				PORT:               ":5000",
+				Environment:        "development",
+				GRpcHost:           "localhost:123321",
+				BtcRpcEndpointTest: "http://localhost",
+				BtcRpcEndpointMain: "http://localhost",
+				BtcRpcUser:         "user",
+				BtcRpcPassword:     "password",
 			},
 		},
 	}
