@@ -274,10 +274,14 @@ func (svc *walletService) RescanWallet(walletId, network string) error {
 		defer response.Body.Close()
 		close(errs)
 	}()
-	time.Sleep(2 * time.Second)
 
-	if err := <-errs; err != nil {
-		return errors.NewInternal(err.Error())
+	select {
+	case <-time.After(10 * time.Second):
+		return nil
+	case err := <-errs:
+		if err != nil {
+			return errors.NewInternal(err.Error())
+		}
 	}
 
 	return nil
