@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -38,7 +37,7 @@ func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wallet, err := h.walletSvc.CreateWallet(context.Background(), dto.Name, &dto.Mnemonic)
+	wallet, err := h.walletSvc.CreateWallet(r.Context(), dto.Name, &dto.Mnemonic)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), errors.NewNotFound(err.Error()))
 		return
@@ -61,7 +60,7 @@ func (h *Handler) CreateMnemonic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mnemonic, err := h.walletSvc.CreateMnemonic(context.Background(), dto.Length, dto.Language)
+	mnemonic, err := h.walletSvc.CreateMnemonic(r.Context(), dto.Length, dto.Language)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
 		return

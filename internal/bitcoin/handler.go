@@ -1,7 +1,6 @@
 package bitcoin
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -52,7 +51,7 @@ func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status, err := h.btcSvc.StatusNode(context.Background(), &dto)
+	status, err := h.btcSvc.StatusNode(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -75,7 +74,7 @@ func (h *Handler) CreateRawTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transaction, err := h.btcSvc.CreateTransaction(context.Background(), &dto)
+	transaction, err := h.btcSvc.CreateTransaction(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -97,7 +96,7 @@ func (h *Handler) DecodeRawTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	decodedTx, err := h.btcSvc.DecodeTransaction(context.Background(), &dto)
+	decodedTx, err := h.btcSvc.DecodeTransaction(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -120,7 +119,7 @@ func (h *Handler) FundForRawTransaction(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	foundedTx, err := h.btcSvc.FoundForRawTransaction(context.Background(), &dto)
+	foundedTx, err := h.btcSvc.FoundForRawTransaction(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -143,7 +142,7 @@ func (h *Handler) SignRawTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signedTx, err := h.btcSvc.SignTransaction(context.Background(), &dto)
+	signedTx, err := h.btcSvc.SignTransaction(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -166,7 +165,7 @@ func (h *Handler) SendRawTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transactionId, err := h.btcSvc.SendTransaction(context.Background(), &dto)
+	transactionId, err := h.btcSvc.SendTransaction(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -189,7 +188,7 @@ func (h *Handler) WalletInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := h.btcSvc.WalletInfo(context.Background(), &dto)
+	info, err := h.btcSvc.WalletInfo(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -212,7 +211,7 @@ func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	walletId, err := h.btcSvc.CreateWallet(context.Background(), &dto)
+	walletId, err := h.btcSvc.CreateWallet(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -235,7 +234,7 @@ func (h *Handler) LoadWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := h.btcSvc.LoadWaller(context.Background(), &dto)
+	info, err := h.btcSvc.LoadWaller(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -258,7 +257,7 @@ func (h *Handler) ImportAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := h.btcSvc.ImportAddress(context.Background(), &dto)
+	info, err := h.btcSvc.ImportAddress(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -281,7 +280,7 @@ func (h *Handler) RescanWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	info, err := h.btcSvc.RescanWallet(context.Background(), &dto)
+	info, err := h.btcSvc.RescanWallet(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return
@@ -304,7 +303,7 @@ func (h *Handler) ListUnspent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, err := h.btcSvc.ListUnspent(context.Background(), &dto)
+	list, err := h.btcSvc.ListUnspent(r.Context(), &dto)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), err)
 		return

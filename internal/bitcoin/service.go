@@ -217,7 +217,7 @@ func (svc *service) RescanWallet(ctx context.Context, dto *RescanWalletDTO) (*Re
 
 	return &RescanWalletInfoDTO{
 		Status:  "scanning has been started",
-		Message: "if you want to check status of scan, you can you getWalletInfo method",
+		Message: "if you want to check status of scan, you can use getWalletInfo method",
 	}, nil
 }
 
