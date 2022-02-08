@@ -228,15 +228,15 @@ func TestService_StatusNode(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *StatusNodeDTO
-		setup  func(dto *StatusNodeDTO)
+		setup  func(ctx context.Context, dto *StatusNodeDTO)
 		expect func(t *testing.T, status *StatusNodeInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *StatusNodeDTO) {
-				btcHealthSvc.EXPECT().Status(dto.Network).Return(&status, nil)
+			setup: func(ctx context.Context, dto *StatusNodeDTO) {
+				btcHealthSvc.EXPECT().Status(ctx, dto.Network).Return(&status, nil)
 			},
 			expect: func(t *testing.T, status *StatusNodeInfoDTO, err error) {
 				assert.Nil(t, err)
@@ -247,8 +247,8 @@ func TestService_StatusNode(t *testing.T) {
 			name: "should return failed check node status",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *StatusNodeDTO) {
-				btcHealthSvc.EXPECT().Status(dto.Network).Return(nil, ErrFailedGetStatusNode)
+			setup: func(ctx context.Context, dto *StatusNodeDTO) {
+				btcHealthSvc.EXPECT().Status(ctx, dto.Network).Return(nil, ErrFailedGetStatusNode)
 			},
 			expect: func(t *testing.T, status *StatusNodeInfoDTO, err error) {
 				assert.NotNil(t, err)
@@ -259,7 +259,7 @@ func TestService_StatusNode(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.StatusNode(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -303,15 +303,15 @@ func TestService_CreateTransaction(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *CreateRawTransactionDTO
-		setup  func(dto *CreateRawTransactionDTO)
+		setup  func(ctx context.Context, dto *CreateRawTransactionDTO)
 		expect func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *CreateRawTransactionDTO) {
-				btcTxSvc.EXPECT().CreateTransaction(bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(&tx, &fee, nil)
+			setup: func(ctx context.Context, dto *CreateRawTransactionDTO) {
+				btcTxSvc.EXPECT().CreateTransaction(ctx, bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(&tx, &fee, nil)
 			},
 			expect: func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
@@ -323,8 +323,8 @@ func TestService_CreateTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *CreateRawTransactionDTO) {
-				btcTxSvc.EXPECT().CreateTransaction(bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, ErrFailedCreateTx)
+			setup: func(ctx context.Context, dto *CreateRawTransactionDTO) {
+				btcTxSvc.EXPECT().CreateTransaction(ctx, bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, ErrFailedCreateTx)
 			},
 			expect: func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error) {
 				assert.Nil(t, createdTx)
@@ -335,7 +335,7 @@ func TestService_CreateTransaction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.CreateTransaction(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -419,15 +419,15 @@ func TestService_DecodeTransaction(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *DecodeRawTransactionDTO
-		setup  func(dto *DecodeRawTransactionDTO)
+		setup  func(ctx context.Context, dto *DecodeRawTransactionDTO)
 		expect func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *DecodeRawTransactionDTO) {
-				btcTxSvc.EXPECT().DecodeTransaction(dto.Tx, dto.Network).Return(decodeTx, nil)
+			setup: func(ctx context.Context, dto *DecodeRawTransactionDTO) {
+				btcTxSvc.EXPECT().DecodeTransaction(ctx, dto.Tx, dto.Network).Return(decodeTx, nil)
 			},
 			expect: func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
@@ -438,8 +438,8 @@ func TestService_DecodeTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *DecodeRawTransactionDTO) {
-				btcTxSvc.EXPECT().DecodeTransaction(dto.Tx, dto.Network).Return(nil, ErrFailedDecodeTx)
+			setup: func(ctx context.Context, dto *DecodeRawTransactionDTO) {
+				btcTxSvc.EXPECT().DecodeTransaction(ctx, dto.Tx, dto.Network).Return(nil, ErrFailedDecodeTx)
 			},
 			expect: func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error) {
 				assert.Nil(t, decodeTx)
@@ -450,7 +450,7 @@ func TestService_DecodeTransaction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.DecodeTransaction(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -480,15 +480,15 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *FundForRawTransactionDTO
-		setup  func(dto *FundForRawTransactionDTO)
+		setup  func(ctx context.Context, dto *FundForRawTransactionDTO)
 		expect func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *FundForRawTransactionDTO) {
-				btcTxSvc.EXPECT().FundForTransaction(dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return(tx, &fee, nil)
+			setup: func(ctx context.Context, dto *FundForRawTransactionDTO) {
+				btcTxSvc.EXPECT().FundForTransaction(ctx, dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return(tx, &fee, nil)
 			},
 			expect: func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
@@ -500,8 +500,8 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *FundForRawTransactionDTO) {
-				btcTxSvc.EXPECT().FundForTransaction(dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return("", nil, ErrFailedFundForTx)
+			setup: func(ctx context.Context, dto *FundForRawTransactionDTO) {
+				btcTxSvc.EXPECT().FundForTransaction(ctx, dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return("", nil, ErrFailedFundForTx)
 			},
 			expect: func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error) {
 				assert.Nil(t, fundedTx)
@@ -512,7 +512,7 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.FoundForRawTransaction(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -552,15 +552,15 @@ func TestService_SignTransaction(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *SignRawTransactionDTO
-		setup  func(dto *SignRawTransactionDTO)
+		setup  func(ctx context.Context, dto *SignRawTransactionDTO)
 		expect func(t *testing.T, signedTx *SignedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *SignRawTransactionDTO) {
-				btcTxSvc.EXPECT().SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("hash", nil)
+			setup: func(ctx context.Context, dto *SignRawTransactionDTO) {
+				btcTxSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("hash", nil)
 			},
 			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
@@ -571,8 +571,8 @@ func TestService_SignTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *SignRawTransactionDTO) {
-				btcTxSvc.EXPECT().SignTransaction(dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("", ErrFailedSignTx)
+			setup: func(ctx context.Context, dto *SignRawTransactionDTO) {
+				btcTxSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("", ErrFailedSignTx)
 			},
 			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
 				assert.Nil(t, signedTx)
@@ -583,7 +583,7 @@ func TestService_SignTransaction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.SignTransaction(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -609,15 +609,15 @@ func TestService_SendTransaction(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *SendRawTransactionDTO
-		setup  func(dto *SendRawTransactionDTO)
+		setup  func(ctx context.Context, dto *SendRawTransactionDTO)
 		expect func(t *testing.T, sentTx *SentRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *SendRawTransactionDTO) {
-				btcTxSvc.EXPECT().SendTransaction(dto.SignedTx, dto.Network).Return("tx_id", nil)
+			setup: func(ctx context.Context, dto *SendRawTransactionDTO) {
+				btcTxSvc.EXPECT().SendTransaction(ctx, dto.SignedTx, dto.Network).Return("tx_id", nil)
 			},
 			expect: func(t *testing.T, sentTx *SentRawTransactionDTO, err error) {
 				assert.Nil(t, err)
@@ -628,8 +628,8 @@ func TestService_SendTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *SendRawTransactionDTO) {
-				btcTxSvc.EXPECT().SendTransaction(dto.SignedTx, dto.Network).Return("", ErrFailedSendTx)
+			setup: func(ctx context.Context, dto *SendRawTransactionDTO) {
+				btcTxSvc.EXPECT().SendTransaction(ctx, dto.SignedTx, dto.Network).Return("", ErrFailedSendTx)
 			},
 			expect: func(t *testing.T, sentTx *SentRawTransactionDTO, err error) {
 				assert.Nil(t, sentTx)
@@ -640,7 +640,7 @@ func TestService_SendTransaction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.SendTransaction(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -685,15 +685,15 @@ func TestService_WalletInfo(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *WalletDTO
-		setup  func(dto *WalletDTO)
+		setup  func(ctx context.Context, dto *WalletDTO)
 		expect func(t *testing.T, walletInfo *WalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *WalletDTO) {
-				btcWalletSvc.EXPECT().WalletInfo(dto.WalletId, dto.Network).Return(info, nil)
+			setup: func(ctx context.Context, dto *WalletDTO) {
+				btcWalletSvc.EXPECT().WalletInfo(ctx, dto.WalletId, dto.Network).Return(info, nil)
 			},
 			expect: func(t *testing.T, walletInfo *WalletInfoDTO, err error) {
 				assert.Nil(t, err)
@@ -704,8 +704,8 @@ func TestService_WalletInfo(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *WalletDTO) {
-				btcWalletSvc.EXPECT().WalletInfo(dto.WalletId, dto.Network).Return(nil, ErrFailedGetWalletInfo)
+			setup: func(ctx context.Context, dto *WalletDTO) {
+				btcWalletSvc.EXPECT().WalletInfo(ctx, dto.WalletId, dto.Network).Return(nil, ErrFailedGetWalletInfo)
 			},
 			expect: func(t *testing.T, walletInfo *WalletInfoDTO, err error) {
 				assert.Nil(t, walletInfo)
@@ -716,7 +716,7 @@ func TestService_WalletInfo(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.WalletInfo(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -741,15 +741,15 @@ func TestService_CreateWallet(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *CreateWalletDTO
-		setup  func(dto *CreateWalletDTO)
+		setup  func(ctx context.Context, dto *CreateWalletDTO)
 		expect func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *CreateWalletDTO) {
-				btcWalletSvc.EXPECT().CreateWallet(dto.Network).Return("wallet_id", nil)
+			setup: func(ctx context.Context, dto *CreateWalletDTO) {
+				btcWalletSvc.EXPECT().CreateWallet(ctx, dto.Network).Return("wallet_id", nil)
 			},
 			expect: func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error) {
 				assert.Nil(t, err)
@@ -760,8 +760,8 @@ func TestService_CreateWallet(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *CreateWalletDTO) {
-				btcWalletSvc.EXPECT().CreateWallet(dto.Network).Return("", ErrFailedCreateWallet)
+			setup: func(ctx context.Context, dto *CreateWalletDTO) {
+				btcWalletSvc.EXPECT().CreateWallet(ctx, dto.Network).Return("", ErrFailedCreateWallet)
 			},
 			expect: func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error) {
 				assert.Nil(t, createdWallet)
@@ -772,7 +772,7 @@ func TestService_CreateWallet(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.CreateWallet(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -798,15 +798,15 @@ func TestService_LoadWaller(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *LoadWalletDTO
-		setup  func(dto *LoadWalletDTO)
+		setup  func(ctx context.Context, dto *LoadWalletDTO)
 		expect func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *LoadWalletDTO) {
-				btcWalletSvc.EXPECT().LoadWallet(dto.WalletId, dto.Network).Return(nil)
+			setup: func(ctx context.Context, dto *LoadWalletDTO) {
+				btcWalletSvc.EXPECT().LoadWallet(ctx, dto.WalletId, dto.Network).Return(nil)
 			},
 			expect: func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error) {
 				assert.Nil(t, err)
@@ -816,8 +816,8 @@ func TestService_LoadWaller(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *LoadWalletDTO) {
-				btcWalletSvc.EXPECT().LoadWallet(dto.WalletId, dto.Network).Return(ErrFailedLoadWallet)
+			setup: func(ctx context.Context, dto *LoadWalletDTO) {
+				btcWalletSvc.EXPECT().LoadWallet(ctx, dto.WalletId, dto.Network).Return(ErrFailedLoadWallet)
 			},
 			expect: func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error) {
 				assert.Nil(t, loadedWallet)
@@ -828,7 +828,7 @@ func TestService_LoadWaller(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.LoadWaller(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -855,15 +855,15 @@ func TestService_ImportAddress(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *ImportAddressDTO
-		setup  func(dto *ImportAddressDTO)
+		setup  func(ctx context.Context, dto *ImportAddressDTO)
 		expect func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *ImportAddressDTO) {
-				btcWalletSvc.EXPECT().ImportAddress(dto.Address, dto.WalletId, dto.Network).Return(nil)
+			setup: func(ctx context.Context, dto *ImportAddressDTO) {
+				btcWalletSvc.EXPECT().ImportAddress(ctx, dto.Address, dto.WalletId, dto.Network).Return(nil)
 			},
 			expect: func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error) {
 				assert.Nil(t, err)
@@ -873,8 +873,8 @@ func TestService_ImportAddress(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *ImportAddressDTO) {
-				btcWalletSvc.EXPECT().ImportAddress(dto.Address, dto.WalletId, dto.Network).Return(ErrFailedImportAddress)
+			setup: func(ctx context.Context, dto *ImportAddressDTO) {
+				btcWalletSvc.EXPECT().ImportAddress(ctx, dto.Address, dto.WalletId, dto.Network).Return(ErrFailedImportAddress)
 			},
 			expect: func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error) {
 				assert.Nil(t, importedAddress)
@@ -885,7 +885,7 @@ func TestService_ImportAddress(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.ImportAddress(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -911,15 +911,15 @@ func TestService_RescanWallet(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *RescanWalletDTO
-		setup  func(dto *RescanWalletDTO)
+		setup  func(ctx context.Context, dto *RescanWalletDTO)
 		expect func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *RescanWalletDTO) {
-				btcWalletSvc.EXPECT().RescanWallet(dto.WalletId, dto.Network).Return(nil)
+			setup: func(ctx context.Context, dto *RescanWalletDTO) {
+				btcWalletSvc.EXPECT().RescanWallet(ctx, dto.WalletId, dto.Network).Return(nil)
 			},
 			expect: func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error) {
 				assert.Nil(t, err)
@@ -929,8 +929,8 @@ func TestService_RescanWallet(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *RescanWalletDTO) {
-				btcWalletSvc.EXPECT().RescanWallet(dto.WalletId, dto.Network).Return(ErrFailedRescanWallet)
+			setup: func(ctx context.Context, dto *RescanWalletDTO) {
+				btcWalletSvc.EXPECT().RescanWallet(ctx, dto.WalletId, dto.Network).Return(ErrFailedRescanWallet)
 			},
 			expect: func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error) {
 				assert.Nil(t, rescanInfo)
@@ -941,7 +941,7 @@ func TestService_RescanWallet(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.RescanWallet(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})
@@ -983,15 +983,15 @@ func TestService_ListUnspent(t *testing.T) {
 		name   string
 		ctx    context.Context
 		dto    *ListUnspentDTO
-		setup  func(dto *ListUnspentDTO)
+		setup  func(ctx context.Context, dto *ListUnspentDTO)
 		expect func(t *testing.T, listUTXO *ListUnspentInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *ListUnspentDTO) {
-				btcWalletSvc.EXPECT().ListUnspent(dto.Address, dto.WalletId, dto.Network).Return(listUTXO, nil)
+			setup: func(ctx context.Context, dto *ListUnspentDTO) {
+				btcWalletSvc.EXPECT().ListUnspent(ctx, dto.Address, dto.WalletId, dto.Network).Return(listUTXO, nil)
 			},
 			expect: func(t *testing.T, utxoInfo *ListUnspentInfoDTO, err error) {
 				assert.Nil(t, err)
@@ -1001,8 +1001,8 @@ func TestService_ListUnspent(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(dto *ListUnspentDTO) {
-				btcWalletSvc.EXPECT().ListUnspent(dto.Address, dto.WalletId, dto.Network).Return(nil, ErrFailedGetUnspent)
+			setup: func(ctx context.Context, dto *ListUnspentDTO) {
+				btcWalletSvc.EXPECT().ListUnspent(ctx, dto.Address, dto.WalletId, dto.Network).Return(nil, ErrFailedGetUnspent)
 			},
 			expect: func(t *testing.T, utxoInfo *ListUnspentInfoDTO, err error) {
 				assert.Nil(t, utxoInfo)
@@ -1013,7 +1013,7 @@ func TestService_ListUnspent(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.setup(tc.dto)
+			tc.setup(tc.ctx, tc.dto)
 			w, err := service.ListUnspent(tc.ctx, tc.dto)
 			tc.expect(t, w, err)
 		})

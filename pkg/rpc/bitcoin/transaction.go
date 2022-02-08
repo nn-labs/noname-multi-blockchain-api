@@ -2,6 +2,7 @@ package bitcoin
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -59,12 +60,12 @@ type UTXO []struct {
 }
 
 type TransactionService interface {
-	CreateTransaction(utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error)
-	//CreateTransaction(inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error)
-	DecodeTransaction(tx string, network string) (*DecodedTx, error)
-	FundForTransaction(createdTx, changeAddress, network string) (string, *float64, error)
-	SignTransaction(tx, privateKey string, utxos UTXO, network string) (string, error)
-	SendTransaction(signedTx, network string) (string, error)
+	CreateTransaction(ctx context.Context, utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error)
+	//CreateTransaction(ctx context.Context,inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error)
+	DecodeTransaction(ctx context.Context, tx string, network string) (*DecodedTx, error)
+	FundForTransaction(ctx context.Context, createdTx, changeAddress, network string) (string, *float64, error)
+	SignTransaction(ctx context.Context, tx, privateKey string, utxos UTXO, network string) (string, error)
+	SendTransaction(ctx context.Context, signedTx, network string) (string, error)
 }
 
 type transactionService struct {
@@ -78,7 +79,7 @@ func NewTransactionService(btcClient IBtcClient) (TransactionService, error) {
 	return &transactionService{btcClient: btcClient}, nil
 }
 
-//func (svc *transactionService) CreateTransaction(client IBtcClient, inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error) {
+//func (svc *transactionService) CreateTransaction(ctx context.Context,client IBtcClient, inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error) {
 //	req := BaseRequest{
 //		JsonRpc: "2.0",
 //		Method:  "createrawtransaction",
@@ -97,7 +98,7 @@ func NewTransactionService(btcClient IBtcClient) (TransactionService, error) {
 //		return "", err
 //	}
 //
-//	response, err := client.Send(body, "", network)
+//	response, err := client.Send(ctx, body, "", network)
 //	if err != nil {
 //		return "", err
 //	}
@@ -116,11 +117,11 @@ func NewTransactionService(btcClient IBtcClient) (TransactionService, error) {
 //	return msg.Result, nil
 //}
 
-func (svc *transactionService) CreateTransaction(utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error) {
+func (svc *transactionService) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error) {
 	chainParams := &chaincfg.TestNet3Params
 
 	// Get fee
-	feeRate, err := GetCurrentFeeRate(svc.btcClient, network)
+	feeRate, err := GetCurrentFeeRate(ctx, svc.btcClient, network)
 	if err != nil {
 		return nil, nil, errors.NewInternal(err.Error())
 	}
@@ -259,7 +260,7 @@ func (svc *transactionService) CreateTransaction(utxos UTXO, fromAddress, toAddr
 	return &createdTx, &btcAmountFee, nil
 }
 
-func (svc *transactionService) DecodeTransaction(tx string, network string) (*DecodedTx, error) {
+func (svc *transactionService) DecodeTransaction(ctx context.Context, tx string, network string) (*DecodedTx, error) {
 	msg := struct {
 		Result DecodedTx `json:"result"`
 		Error  struct {
@@ -278,7 +279,7 @@ func (svc *transactionService) DecodeTransaction(tx string, network string) (*De
 		return nil, err
 	}
 
-	response, err := svc.btcClient.Send(body, "", network)
+	response, err := svc.btcClient.Send(ctx, body, "", network)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +308,7 @@ func (svc *transactionService) DecodeTransaction(tx string, network string) (*De
 	}, nil
 }
 
-func (svc *transactionService) FundForTransaction(createdTx, changeAddress, network string) (string, *float64, error) {
+func (svc *transactionService) FundForTransaction(ctx context.Context, createdTx, changeAddress, network string) (string, *float64, error) {
 	subtractFeeFromOutputs := []int64{0}
 
 	params := map[string]interface{}{
@@ -336,7 +337,7 @@ func (svc *transactionService) FundForTransaction(createdTx, changeAddress, netw
 		return "", nil, err
 	}
 
-	response, err := svc.btcClient.Send(body, "", network)
+	response, err := svc.btcClient.Send(ctx, body, "", network)
 	if err != nil {
 		return "", nil, err
 	}
@@ -355,7 +356,7 @@ func (svc *transactionService) FundForTransaction(createdTx, changeAddress, netw
 	return msg.Result.Hex, &msg.Result.Fee, nil
 }
 
-func (svc *transactionService) SignTransaction(tx, privateKey string, utxos UTXO, network string) (string, error) {
+func (svc *transactionService) SignTransaction(ctx context.Context, tx, privateKey string, utxos UTXO, network string) (string, error) {
 	privateKeyArray := []string{privateKey}
 	req := BaseRequest{
 		JsonRpc: "2.0",
@@ -379,7 +380,7 @@ func (svc *transactionService) SignTransaction(tx, privateKey string, utxos UTXO
 		return "", err
 	}
 
-	response, err := svc.btcClient.Send(body, "", network)
+	response, err := svc.btcClient.Send(ctx, body, "", network)
 	if err != nil {
 		return "", err
 	}
@@ -402,7 +403,7 @@ func (svc *transactionService) SignTransaction(tx, privateKey string, utxos UTXO
 	return msg.Result.Hex, nil
 }
 
-func (svc *transactionService) SendTransaction(signedTx, network string) (string, error) {
+func (svc *transactionService) SendTransaction(ctx context.Context, signedTx, network string) (string, error) {
 	msg := struct {
 		Result string `json:"result"`
 		Error  struct {
@@ -421,7 +422,7 @@ func (svc *transactionService) SendTransaction(signedTx, network string) (string
 		return "", err
 	}
 
-	response, err := svc.btcClient.Send(body, "", network)
+	response, err := svc.btcClient.Send(ctx, body, "", network)
 	if err != nil {
 		return "", err
 	}

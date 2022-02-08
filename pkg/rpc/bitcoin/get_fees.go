@@ -1,12 +1,13 @@
 package bitcoin
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"math/big"
 )
 
-func GetCurrentFee(client IBtcClient, network string) (*float64, error) {
+func GetCurrentFee(ctx context.Context, client IBtcClient, network string) (*float64, error) {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "estimatesmartfee",
@@ -28,7 +29,7 @@ func GetCurrentFee(client IBtcClient, network string) (*float64, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	response, err := client.Send(body, "", network)
+	response, err := client.Send(ctx, body, "", network)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -61,8 +62,8 @@ func GetCurrentFee(client IBtcClient, network string) (*float64, error) {
 	return &fee, nil
 }
 
-func GetCurrentFeeRate(client IBtcClient, network string) (*big.Int, error) {
-	fee, err := GetCurrentFee(client, network)
+func GetCurrentFeeRate(ctx context.Context, client IBtcClient, network string) (*big.Int, error) {
+	fee, err := GetCurrentFee(ctx, client, network)
 	if err != nil {
 		return nil, err
 	}
