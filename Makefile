@@ -27,6 +27,7 @@ clean:
 
 gen-mock: clean deps
 	$(call pprint, Generating mocks for tests...)
+	go get github.com/golang/mock/mockgen
 	go generate ./...
 	$(call completed)
 
