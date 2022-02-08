@@ -29,8 +29,7 @@ clean:
 .SILENT: gen-mock
 gen-mock: clean deps
 	$(call pprint, Generating mocks for tests...)
-	go install github.com/golang/mock/mockgen@v1.6.0
-	go install github.com/vektra/mockery/v2@latest
+	go get github.com/golang/mock
 	go generate ./...
 	$(call completed)
 
