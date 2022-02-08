@@ -39,8 +39,10 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug
+      - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Debug
         run: |
           pwd
           echo ${HOME}
