@@ -48,4 +48,6 @@ jobs:
       - name: Run test
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
+          chmod +x app.env.sh
+          ./app.env.sh
           make test
