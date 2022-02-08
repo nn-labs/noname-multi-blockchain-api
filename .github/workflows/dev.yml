@@ -36,21 +36,6 @@ jobs:
       - name: Run linter
         run: make lint
 
-  debug:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Debug
-        run: |
-          pwd
-          echo ${HOME}
-          echo ${GITHUB_WORKSPACE}
-          echo ${GOPATH}
-          echo ${GOROOT}
-          ls -la
-
   test:
     runs-on: ubuntu-latest
     name: Run tests
@@ -63,4 +48,13 @@ jobs:
       - name: Run test
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
+          cat > app.txt << EOF
+          PORT=:5000
+          APP_ENV=development
+          GRPC_HOST=localhost
+          BTC_RPC_ENDPOINT_TEST=localhost
+          BTC_RPC_ENDPOINT_MAIN=localhost
+          BTC_RPC_USER=user
+          BTC_RPC_PASSWORD=password
+          EOF
           make test
