@@ -41,11 +41,11 @@ jobs:
     steps:
       - name: Debug
         run: |
-        pwd
-        echo ${HOME}
-        echo ${GITHUB_WORKSPACE}
-        echo ${GOPATH}
-        echo ${GOROOT}
+          pwd
+          echo ${HOME}
+          echo ${GITHUB_WORKSPACE}
+          echo ${GOPATH}
+          echo ${GOROOT}
 
   test:
     runs-on: ubuntu-latest
