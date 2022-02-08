@@ -28,13 +28,12 @@ clean:
 gen-mock: clean deps
 	$(call pprint, Generating mocks for tests...)
 	go get github.com/golang/mock/mockgen
-	export PATH=$PATH:$(go env GOPATH)/bin
 	go generate ./...
 	$(call completed)
 
 test: gen-mock
 	$(call pprint, Runnning tests...)
-	cat > app.env << 'EOF'
+	cat > app.env << EOF
 	PORT=:5000
 	APP_ENV=development
 	GRPC_HOST=localhost
