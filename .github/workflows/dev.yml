@@ -36,6 +36,17 @@ jobs:
       - name: Run linter
         run: make lint
 
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug
+        run: |
+        pwd
+        echo ${HOME}
+        echo ${GITHUB_WORKSPACE}
+        echo ${GOPATH}
+        echo ${GOROOT}
+
   test:
     runs-on: ubuntu-latest
     name: Run tests
