@@ -1,6 +1,7 @@
 package bitcoin
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/google/uuid"
 	"nn-blockchain-api/pkg/errors"
@@ -42,12 +43,12 @@ type Unspent struct {
 }
 
 type WalletService interface {
-	WalletInfo(walletId, network string) (*Info, error)
-	CreateWallet(network string) (string, error)
-	LoadWallet(walletId, network string) error
-	ImportAddress(address, walletId, network string) error
-	RescanWallet(walletId, network string) error
-	ListUnspent(address, walletId, network string) ([]*Unspent, error)
+	WalletInfo(ctx context.Context, walletId, network string) (*Info, error)
+	CreateWallet(ctx context.Context, network string) (string, error)
+	LoadWallet(ctx context.Context, walletId, network string) error
+	ImportAddress(ctx context.Context, address, walletId, network string) error
+	RescanWallet(ctx context.Context, walletId, network string) error
+	ListUnspent(ctx context.Context, address, walletId, network string) ([]*Unspent, error)
 }
 
 type walletService struct {
@@ -61,7 +62,7 @@ func NewWalletService(btcClient IBtcClient) (WalletService, error) {
 	return &walletService{btcClient: btcClient}, nil
 }
 
-func (svc *walletService) WalletInfo(walletId, network string) (*Info, error) {
+func (svc *walletService) WalletInfo(ctx context.Context, walletId, network string) (*Info, error) {
 	msg := struct {
 		Result Info `json:"result"`
 		Error  struct {
@@ -80,7 +81,7 @@ func (svc *walletService) WalletInfo(walletId, network string) (*Info, error) {
 		return nil, err
 	}
 
-	response, err := svc.btcClient.Send(body, walletId, network)
+	response, err := svc.btcClient.Send(ctx, body, walletId, network)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +100,7 @@ func (svc *walletService) WalletInfo(walletId, network string) (*Info, error) {
 	return &msg.Result, nil
 }
 
-func (svc *walletService) CreateWallet(network string) (string, error) {
+func (svc *walletService) CreateWallet(ctx context.Context, network string) (string, error) {
 	walletId, err := uuid.NewUUID()
 	if err != nil {
 		return "", err
@@ -127,7 +128,7 @@ func (svc *walletService) CreateWallet(network string) (string, error) {
 		return "", err
 	}
 
-	response, err := svc.btcClient.Send(body, "", network)
+	response, err := svc.btcClient.Send(ctx, body, "", network)
 	if err != nil {
 		return "", err
 	}
@@ -150,7 +151,7 @@ func (svc *walletService) CreateWallet(network string) (string, error) {
 	return msg.Result.Name, nil
 }
 
-func (svc *walletService) LoadWallet(walletId, network string) error {
+func (svc *walletService) LoadWallet(ctx context.Context, walletId, network string) error {
 	msg := struct {
 		Result struct {
 			Name    string `json:"name"`
@@ -172,7 +173,7 @@ func (svc *walletService) LoadWallet(walletId, network string) error {
 		return err
 	}
 
-	response, err := svc.btcClient.Send(body, "", network)
+	response, err := svc.btcClient.Send(ctx, body, "", network)
 	if err != nil {
 		return err
 	}
@@ -195,7 +196,7 @@ func (svc *walletService) LoadWallet(walletId, network string) error {
 	return nil
 }
 
-func (svc *walletService) ImportAddress(address, walletId, network string) error {
+func (svc *walletService) ImportAddress(ctx context.Context, address, walletId, network string) error {
 	msg := struct {
 		Result string `json:"result"`
 		Error  struct {
@@ -214,7 +215,7 @@ func (svc *walletService) ImportAddress(address, walletId, network string) error
 		return err
 	}
 
-	response, err := svc.btcClient.Send(body, walletId, network)
+	response, err := svc.btcClient.Send(ctx, body, walletId, network)
 	if err != nil {
 		return err
 	}
@@ -233,7 +234,7 @@ func (svc *walletService) ImportAddress(address, walletId, network string) error
 	return nil
 }
 
-func (svc *walletService) RescanWallet(walletId, network string) error {
+func (svc *walletService) RescanWallet(ctx context.Context, walletId, network string) error {
 	//msg := struct {
 	//	Result struct {
 	//		StartHeight int64 `json:"start_height"`
@@ -257,7 +258,7 @@ func (svc *walletService) RescanWallet(walletId, network string) error {
 
 	errs := make(chan error, 1)
 	go func() {
-		response, err := svc.btcClient.Send(body, walletId, network)
+		response, err := svc.btcClient.Send(ctx, body, walletId, network)
 		if err != nil {
 			errs <- err
 		}
@@ -287,7 +288,7 @@ func (svc *walletService) RescanWallet(walletId, network string) error {
 	return nil
 }
 
-func (svc *walletService) ListUnspent(address, walletId, network string) ([]*Unspent, error) {
+func (svc *walletService) ListUnspent(ctx context.Context, address, walletId, network string) ([]*Unspent, error) {
 	msg := struct {
 		Result []*Unspent `json:"result"`
 		Error  struct {
@@ -306,7 +307,7 @@ func (svc *walletService) ListUnspent(address, walletId, network string) ([]*Uns
 		return nil, err
 	}
 
-	response, err := svc.btcClient.Send(body, walletId, network)
+	response, err := svc.btcClient.Send(ctx, body, walletId, network)
 	if err != nil {
 		return nil, err
 	}

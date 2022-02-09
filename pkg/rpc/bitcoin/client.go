@@ -2,6 +2,7 @@ package bitcoin
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -29,7 +30,7 @@ type BaseResponse struct {
 }
 
 type IBtcClient interface {
-	Send(body io.Reader, walletId string, network string) (*http.Response, error)
+	Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error)
 	EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error)
 	//DecodeBaseResponse(response *http.Response, msg interface{}) (*BaseResponse, error)
 }
@@ -56,7 +57,7 @@ func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword s
 	}, nil
 }
 
-func (btc *btcClient) Send(body io.Reader, walletId string, network string) (*http.Response, error) {
+func (btc *btcClient) Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error) {
 	var endPoint string
 
 	if network == "main" {
@@ -70,7 +71,7 @@ func (btc *btcClient) Send(body io.Reader, walletId string, network string) (*ht
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", endPoint, body)
+	req, err := http.NewRequestWithContext(ctx, "POST", endPoint, body)
 	if err != nil {
 		return nil, err
 	}

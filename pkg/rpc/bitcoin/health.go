@@ -1,6 +1,7 @@
 package bitcoin
 
 import (
+	"context"
 	"encoding/json"
 	"nn-blockchain-api/pkg/errors"
 )
@@ -56,7 +57,7 @@ type StatusNode struct {
 }
 
 type HealthService interface {
-	Status(network string) (*StatusNode, error)
+	Status(ctx context.Context, network string) (*StatusNode, error)
 }
 
 type healthService struct {
@@ -70,7 +71,7 @@ func NewHealthService(btcClient IBtcClient) (HealthService, error) {
 	return &healthService{btcClient: btcClient}, nil
 }
 
-func (svc *healthService) Status(network string) (*StatusNode, error) {
+func (svc *healthService) Status(ctx context.Context, network string) (*StatusNode, error) {
 	req := BaseRequest{
 		JsonRpc: "2.0",
 		Method:  "getblockchaininfo",
@@ -90,7 +91,7 @@ func (svc *healthService) Status(network string) (*StatusNode, error) {
 		return nil, err
 	}
 
-	response, err := svc.btcClient.Send(body, "", network)
+	response, err := svc.btcClient.Send(ctx, body, "", network)
 	if err != nil {
 		return nil, err
 	}
