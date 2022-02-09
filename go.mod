@@ -13,10 +13,13 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
-	golang.org/x/net v0.0.0-20220111093109-d55c255bac03 // indirect
-	golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
-	google.golang.org/genproto v0.0.0-20220112215332-a9c7c0acf9f2 // indirect
 	google.golang.org/grpc v1.43.0
 	google.golang.org/protobuf v1.27.1
+)
+
+require (
+	golang.org/x/crypto v0.0.0-20220112180741-5e0467b6c7ce // indirect
+    golang.org/x/net v0.0.0-20220111093109-d55c255bac03 // indirect
+    golang.org/x/sys v0.0.0-20220111092808-5a964db01320 // indirect
+    google.golang.org/genproto v0.0.0-20220112215332-a9c7c0acf9f2 // indirect
 )
