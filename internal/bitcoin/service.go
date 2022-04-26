@@ -2,9 +2,10 @@ package bitcoin
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"nn-blockchain-api/pkg/errors"
-	"nn-blockchain-api/pkg/rpc/bitcoin"
+	rpc_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin"
+
+	"github.com/sirupsen/logrus"
 )
 
 //go:generate mockgen -source=service.go -destination=mocks/service_mock.go
@@ -34,12 +35,12 @@ type Service interface {
 
 type service struct {
 	log          *logrus.Logger
-	btcTxSvc     bitcoin.TransactionService
-	btcWalletSvc bitcoin.WalletService
-	btcHealthSvc bitcoin.HealthService
+	btcTxSvc     rpc_bitcoin.TransactionService
+	btcWalletSvc rpc_bitcoin.WalletService
+	btcHealthSvc rpc_bitcoin.HealthService
 }
 
-func NewService(log *logrus.Logger, btcTxSvc bitcoin.TransactionService, btcWalletSvc bitcoin.WalletService, btcHealthSvc bitcoin.HealthService) (Service, error) {
+func NewService(log *logrus.Logger, btcTxSvc rpc_bitcoin.TransactionService, btcWalletSvc rpc_bitcoin.WalletService, btcHealthSvc rpc_bitcoin.HealthService) (Service, error) {
 	if log == nil {
 		return nil, errors.NewInternal("invalid logger")
 	}
@@ -73,7 +74,7 @@ func (svc *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*Status
 }
 
 func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error) {
-	tx, fee, err := svc.btcTxSvc.CreateTransaction(ctx, bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
+	tx, fee, err := svc.btcTxSvc.CreateTransaction(ctx, rpc_bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.WithMessage(ErrFailedCreateTx, err.Error())
@@ -124,7 +125,7 @@ func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransaction
 	//	utxos = append(utxos, map[string]interface{}{"txid": s.TxId, "vout": s.Vout, "scriptPubKey": s.PKScript, "amount": s.Amount})
 	//}
 
-	tx, err := svc.btcTxSvc.SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network)
+	tx, err := svc.btcTxSvc.SignTransaction(ctx, dto.Tx, dto.PrivateKey, rpc_bitcoin.UTXO(dto.Utxo), dto.Network)
 	if err != nil {
 		svc.log.WithContext(ctx).Errorf(err.Error())
 		return nil, errors.WithMessage(ErrFailedSignTx, err.Error())

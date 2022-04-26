@@ -77,8 +77,16 @@ func main() {
 
 	// Handlers
 	healthHandler := health.NewHandler()
-	walletHandler := wallet.NewHandler(walletSvc)
-	bitcoinHandler := bitcoin.NewHandler(bitcoinSvc)
+
+	walletHandler, err := wallet.NewHandler(walletSvc)
+	if err != nil {
+		logger.Fatalf("failed to create wallet handler: %v", err)
+	}
+
+	bitcoinHandler, err := bitcoin.NewHandler(bitcoinSvc)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin handler: %v", err)
+	}
 
 	router.Route("/api/v1", func(r chi.Router) {
 		healthHandler.SetupRoutes(r)

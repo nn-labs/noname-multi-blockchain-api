@@ -2,20 +2,26 @@ package wallet
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
+	gErrors "errors"
 	"net/http"
 	"nn-blockchain-api/pkg/errors"
 	"nn-blockchain-api/pkg/respond"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
 	walletSvc Service
 }
 
-func NewHandler(walletSvc Service) *Handler {
+func NewHandler(walletSvc Service) (*Handler, error) {
+	if walletSvc == nil {
+		return nil, gErrors.New("invalid wallet service")
+	}
+
 	return &Handler{
 		walletSvc: walletSvc,
-	}
+	}, nil
 }
 
 func (h *Handler) SetupRoutes(router chi.Router) {

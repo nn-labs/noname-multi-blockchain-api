@@ -1,4 +1,4 @@
-.SILENT: deps lint clean gen-mock test build
+.SILENT: deps lint clean gen-mock test build run
 
 CYAN=\033[0;36m
 RESET=\033[0m
@@ -39,4 +39,9 @@ test: gen-mock
 build: clean deps
 	$(call pprint, Building app...)
 	go build -o ./bin/server ./cmd
+	$(call completed)
+
+run:
+	$(call pprint, Run app...)
+	go run ./cmd/main.go
 	$(call completed)
