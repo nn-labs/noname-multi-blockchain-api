@@ -1,4 +1,4 @@
-package bitcoin
+package rpc_bitcoin
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ type btcClient struct {
 type BaseRequest struct {
 	JsonRpc string        `json:"jsonrpc"`
 	Method  string        `json:"method"`
-	Params  []interface{} `json:"params,array"`
+	Params  []interface{} `json:"params"`
 }
 
 type BaseResponse struct {

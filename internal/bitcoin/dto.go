@@ -1,9 +1,24 @@
 package bitcoin
 
 import (
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"nn-blockchain-api/pkg/errors"
+	"strings"
 )
+
+type ApiError struct {
+	Field string
+	Msg   string
+}
+
+func msgForTag(tag string) string {
+	switch tag {
+	case "required":
+		return "is required"
+	}
+	return ""
+}
 
 func Validate(dto interface{}) error {
 	validate := validator.New()
@@ -13,11 +28,15 @@ func Validate(dto interface{}) error {
 			return errors.WithMessage(ErrInvalidRequest, err.Error())
 		}
 
-		validationErr := ErrInvalidRequest
+		var out []string
 		for _, err := range err.(validator.ValidationErrors) {
-			validationErr = errors.WithMessage(validationErr, err.Error())
+			//out = append(out, ApiError{
+			//	Field: err.Field(),
+			//	Msg:   msgForTag(err.Tag()),
+			//})
+			out = append(out, fmt.Sprintf("%v - %v", err.Field(), msgForTag(err.Tag())))
 		}
-		return validationErr
+		return errors.WithMessage(ErrInvalidRequest, strings.Join(out, ", "))
 	}
 	return nil
 }

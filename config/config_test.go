@@ -9,7 +9,7 @@ import (
 func TestInit(t *testing.T) {
 	type env struct {
 		port               string
-		environment        string
+		appEnv             string
 		gRpcHost           string
 		btcRpcEndpointTest string
 		btcRpcEndpointMain string
@@ -23,7 +23,7 @@ func TestInit(t *testing.T) {
 
 	setEnv := func(env env) {
 		os.Setenv("PORT", env.port)
-		os.Setenv("ENVIRONMENT", env.environment)
+		os.Setenv("APP_ENV", env.appEnv)
 		os.Setenv("GRPC_HOST", env.gRpcHost)
 		os.Setenv("BTC_RPC_ENDPOINT_TEST", env.btcRpcEndpointTest)
 		os.Setenv("BTC_RPC_ENDPOINT_MAIN", env.btcRpcEndpointMain)
@@ -42,7 +42,7 @@ func TestInit(t *testing.T) {
 			args: args{
 				env: env{
 					port:               ":5000",
-					environment:        "development",
+					appEnv:             "development",
 					gRpcHost:           "localhost:123321",
 					btcRpcEndpointTest: "http://localhost",
 					btcRpcEndpointMain: "http://localhost",
@@ -51,13 +51,17 @@ func TestInit(t *testing.T) {
 				},
 			},
 			want: &Config{
-				PORT:               ":5000",
-				Environment:        "development",
-				GRpcHost:           "localhost:123321",
-				BtcRpcEndpointTest: "http://localhost",
-				BtcRpcEndpointMain: "http://localhost",
-				BtcRpcUser:         "user",
-				BtcRpcPassword:     "password",
+				PORT:   ":5000",
+				AppEnv: "development",
+				GRps: GRps{
+					GRpcHost: "localhost:123321",
+				},
+				BtcRpc: BtcRpc{
+					BtcRpcEndpointTest: "http://localhost",
+					BtcRpcEndpointMain: "http://localhost",
+					BtcRpcUser:         "user",
+					BtcRpcPassword:     "password",
+				},
 			},
 		},
 	}
@@ -66,7 +70,7 @@ func TestInit(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			setEnv(test.args.env)
 
-			got, err := Get("..")
+			got, err := Get()
 			if (err != nil) != test.wantError {
 				t.Errorf("Init() error = %v, wantErr %v", err, test.wantError)
 

@@ -1,36 +1,49 @@
 package config
 
 import (
-	"fmt"
-	"github.com/spf13/viper"
+	"sync"
+
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
 )
 
 type Config struct {
-	PORT               string `mapstructure:"PORT"`
-	Environment        string `mapstructure:"APP_ENV"`
-	GRpcHost           string `mapstructure:"GRPC_HOST"`
-	BtcRpcEndpointTest string `mapstructure:"BTC_RPC_ENDPOINT_TEST"`
-	BtcRpcEndpointMain string `mapstructure:"BTC_RPC_ENDPOINT_MAIN"`
-	BtcRpcUser         string `mapstructure:"BTC_RPC_USER"`
-	BtcRpcPassword     string `mapstructure:"BTC_RPC_PASSWORD"`
+	PORT   string `required:"true" default:"5000" envconfig:"PORT"`
+	AppEnv string `required:"true" envconfig:"APP_ENV"`
+
+	GRps
+	BtcRpc
 }
 
-func Get(path string) (*Config, error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
-	viper.SetConfigType("env")
-	viper.AutomaticEnv()
+type GRps struct {
+	GRpcHost string `required:"true" envconfig:"GRPC_HOST"`
+}
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		return nil, err
-	}
+type BtcRpc struct {
+	BtcRpcEndpointTest string `required:"true" envconfig:"BTC_RPC_ENDPOINT_TEST"`
+	BtcRpcEndpointMain string `required:"true" envconfig:"BTC_RPC_ENDPOINT_MAIN"`
+	BtcRpcUser         string `required:"true" envconfig:"BTC_RPC_USER"`
+	BtcRpcPassword     string `required:"true" envconfig:"BTC_RPC_PASSWORD"`
+}
 
-	var configuration Config
-	err = viper.Unmarshal(&configuration)
-	if err != nil {
-		fmt.Printf("Unable to decode into struct, %v", err)
-	}
+var (
+	once   sync.Once
+	config *Config
+)
 
-	return &configuration, nil
+func Get() (*Config, error) {
+	var err error
+	once.Do(func() {
+		var cfg Config
+		// If you run it locally and through terminal please set up this in Load function (../.env)
+		_ = godotenv.Load(".env")
+
+		if err = envconfig.Process("", &cfg); err != nil {
+			return
+		}
+
+		config = &cfg
+	})
+
+	return config, err
 }

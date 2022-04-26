@@ -2,20 +2,26 @@ package bitcoin
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
+	gErrors "errors"
 	"net/http"
 	"nn-blockchain-api/pkg/errors"
 	"nn-blockchain-api/pkg/respond"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
 	btcSvc Service
 }
 
-func NewHandler(btcSvc Service) *Handler {
+func NewHandler(btcSvc Service) (*Handler, error) {
+	if btcSvc == nil {
+		return nil, gErrors.New("invalid bitcoin service")
+	}
+
 	return &Handler{
 		btcSvc: btcSvc,
-	}
+	}, nil
 }
 
 func (h *Handler) SetupRoutes(router chi.Router) {

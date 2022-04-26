@@ -1,11 +1,12 @@
-package bitcoin
+package rpc_bitcoin
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/uuid"
 	"nn-blockchain-api/pkg/errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 //go:generate mockgen -source=wallet.go -destination=mocks/wallet_mock.go

@@ -2,13 +2,14 @@ package bitcoin
 
 import (
 	"context"
+	"nn-blockchain-api/pkg/errors"
+	rpc_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin"
+	mock_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin/mocks"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"nn-blockchain-api/pkg/errors"
-	"nn-blockchain-api/pkg/rpc/bitcoin"
-	mock_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin/mocks"
-	"testing"
 )
 
 func TestNewService(t *testing.T) {
@@ -18,9 +19,9 @@ func TestNewService(t *testing.T) {
 	tests := []struct {
 		name         string
 		log          *logrus.Logger
-		btcTxSvc     bitcoin.TransactionService
-		btcWalletSvc bitcoin.WalletService
-		btcHealthSvc bitcoin.HealthService
+		btcTxSvc     rpc_bitcoin.TransactionService
+		btcWalletSvc rpc_bitcoin.WalletService
+		btcHealthSvc rpc_bitcoin.HealthService
 		expect       func(*testing.T, Service, error)
 	}{
 		{
@@ -103,7 +104,7 @@ func TestService_StatusNode(t *testing.T) {
 
 	service, _ := NewService(&logrus.Logger{}, btcTxSvc, btcWalletSvc, btcHealthSvc)
 
-	status := bitcoin.StatusNode{
+	status := rpc_bitcoin.StatusNode{
 		Chain:                "test",
 		Blocks:               2138184,
 		Headers:              2138184,
@@ -311,7 +312,7 @@ func TestService_CreateTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(ctx context.Context, dto *CreateRawTransactionDTO) {
-				btcTxSvc.EXPECT().CreateTransaction(ctx, bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(&tx, &fee, nil)
+				btcTxSvc.EXPECT().CreateTransaction(ctx, rpc_bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(&tx, &fee, nil)
 			},
 			expect: func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
@@ -324,7 +325,7 @@ func TestService_CreateTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(ctx context.Context, dto *CreateRawTransactionDTO) {
-				btcTxSvc.EXPECT().CreateTransaction(ctx, bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, ErrFailedCreateTx)
+				btcTxSvc.EXPECT().CreateTransaction(ctx, rpc_bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, ErrFailedCreateTx)
 			},
 			expect: func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error) {
 				assert.Nil(t, createdTx)
@@ -357,7 +358,7 @@ func TestService_DecodeTransaction(t *testing.T) {
 		Network: "test",
 	}
 
-	decodeTx := &bitcoin.DecodedTx{
+	decodeTx := &rpc_bitcoin.DecodedTx{
 		Txid:     "tx",
 		Hash:     "hash",
 		Version:  0,
@@ -560,7 +561,7 @@ func TestService_SignTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(ctx context.Context, dto *SignRawTransactionDTO) {
-				btcTxSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("hash", nil)
+				btcTxSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, rpc_bitcoin.UTXO(dto.Utxo), dto.Network).Return("hash", nil)
 			},
 			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
@@ -572,7 +573,7 @@ func TestService_SignTransaction(t *testing.T) {
 			ctx:  context.Background(),
 			dto:  dto,
 			setup: func(ctx context.Context, dto *SignRawTransactionDTO) {
-				btcTxSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin.UTXO(dto.Utxo), dto.Network).Return("", ErrFailedSignTx)
+				btcTxSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, rpc_bitcoin.UTXO(dto.Utxo), dto.Network).Return("", ErrFailedSignTx)
 			},
 			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
 				assert.Nil(t, signedTx)
@@ -662,7 +663,7 @@ func TestService_WalletInfo(t *testing.T) {
 		Network:  "test",
 	}
 
-	info := &bitcoin.Info{
+	info := &rpc_bitcoin.Info{
 		Walletname:            "wallet_id",
 		Walletversion:         0,
 		Format:                "format",
@@ -964,7 +965,7 @@ func TestService_ListUnspent(t *testing.T) {
 		Network:  "test",
 	}
 
-	listUTXO := []*bitcoin.Unspent{
+	listUTXO := []*rpc_bitcoin.Unspent{
 		{
 			Txid:          "tx_id",
 			Vout:          1,

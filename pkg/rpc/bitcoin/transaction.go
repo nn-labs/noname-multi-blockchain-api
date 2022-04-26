@@ -1,17 +1,18 @@
-package bitcoin
+package rpc_bitcoin
 
 import (
 	"bytes"
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"math/big"
+	"nn-blockchain-api/pkg/errors"
+
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
-	"math/big"
-	"nn-blockchain-api/pkg/errors"
 )
 
 //go:generate mockgen -source=transaction.go -destination=mocks/transaction_mock.go
@@ -137,7 +138,8 @@ func (svc *transactionService) CreateTransaction(ctx context.Context, utxos UTXO
 
 	// prepare transaction inputs
 	sourceUtxosAmount := big.NewInt(0)
-	var sourceUTXOs []*UnspentList
+	// var sourceUTXOs []*UnspentList
+
 	for idx := range utxos {
 		hashStr := utxos[idx].TxId
 		sourceUtxosAmount.Add(sourceUtxosAmount, new(big.Int).SetInt64(utxos[idx].Amount))
@@ -150,11 +152,11 @@ func (svc *transactionService) CreateTransaction(ctx context.Context, utxos UTXO
 		if amount <= sourceUtxosAmount.Int64() {
 			sourceUTXOIndex := uint32(utxos[idx].Vout)
 			sourceUTXO := wire.NewOutPoint(sourceUTXOHash, sourceUTXOIndex)
-			sourceUTXOs = append(sourceUTXOs, &UnspentList{
-				TxId:         utxos[idx].TxId,
-				Vout:         utxos[idx].Vout,
-				ScriptPubKey: utxos[idx].PKScript,
-			})
+			// sourceUTXOs = append(sourceUTXOs, &UnspentList{
+			// 	TxId:         utxos[idx].TxId,
+			// 	Vout:         utxos[idx].Vout,
+			// 	ScriptPubKey: utxos[idx].PKScript,
+			// })
 			sourceTxIn := wire.NewTxIn(sourceUTXO, nil, nil)
 
 			tx.AddTxIn(sourceTxIn)
@@ -163,11 +165,11 @@ func (svc *transactionService) CreateTransaction(ctx context.Context, utxos UTXO
 
 		sourceUTXOIndex := uint32(utxos[idx].Vout)
 		sourceUTXO := wire.NewOutPoint(sourceUTXOHash, sourceUTXOIndex)
-		sourceUTXOs = append(sourceUTXOs, &UnspentList{
-			TxId:         utxos[idx].TxId,
-			Vout:         utxos[idx].Vout,
-			ScriptPubKey: utxos[idx].PKScript,
-		})
+		// sourceUTXOs = append(sourceUTXOs, &UnspentList{
+		// 	TxId:         utxos[idx].TxId,
+		// 	Vout:         utxos[idx].Vout,
+		// 	ScriptPubKey: utxos[idx].PKScript,
+		// })
 		sourceTxIn := wire.NewTxIn(sourceUTXO, nil, nil)
 
 		tx.AddTxIn(sourceTxIn)
