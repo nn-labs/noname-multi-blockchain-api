@@ -1,10 +1,6 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"nn-blockchain-api/config"
 	"nn-blockchain-api/internal/bitcoin"
@@ -12,6 +8,11 @@ import (
 	"nn-blockchain-api/internal/wallet"
 	"nn-blockchain-api/pkg/grpc_client"
 	bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -19,19 +20,19 @@ func main() {
 	logger := logrus.New()
 
 	// Init config
-	cfg, err := config.Get(".")
+	cfg, err := config.Get()
 	if err != nil {
 		logger.Fatalf("failed to load config: %v", err)
 	}
 
 	// Set-up gRPC client
-	walletClient, err := grpc_client.NewWalletClient(cfg.GRpcHost)
+	walletClient, err := grpc_client.NewWalletClient(cfg.GRps.GRpcHost)
 	if err != nil {
 		logger.Fatalf("failed to set-up wallet client: %v", err)
 	}
 
 	// Rpc clients
-	btcRpcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpcEndpointTest, cfg.BtcRpcEndpointMain, cfg.BtcRpcUser, cfg.BtcRpcPassword)
+	btcRpcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpc.BtcRpcEndpointTest, cfg.BtcRpc.BtcRpcEndpointMain, cfg.BtcRpc.BtcRpcUser, cfg.BtcRpc.BtcRpcPassword)
 	if err != nil {
 		logger.Fatalf("failed to set-up btc rpc client: %v", err)
 	}

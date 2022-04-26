@@ -2,13 +2,14 @@ package bitcoin
 
 import (
 	"context"
-	"github.com/golang/mock/gomock"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"nn-blockchain-api/pkg/errors"
 	"nn-blockchain-api/pkg/rpc/bitcoin"
 	mock_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin/mocks"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewService(t *testing.T) {
