@@ -2,20 +2,21 @@ package eth
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"nn-blockchain-api/config"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
-import "nn-blockchain-api/config"
 
 func GetBaseSetupTest() IEthClient {
 	logger := logrus.New()
 
-	cfg, err := config.Get("../../../")
+	cfg, err := config.Get()
 	if err != nil {
 		logger.Fatalf("failed to load config: %v", err)
 	}
 
-	ethClient := NewEthClient(cfg.EthEndpoint)
+	ethClient := NewEthClient(cfg.EthRpc.EthRpcEndpointTest)
 
 	return ethClient
 }
