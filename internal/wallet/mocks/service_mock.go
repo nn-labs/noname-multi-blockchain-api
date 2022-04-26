@@ -36,10 +36,10 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 }
 
 // CreateMnemonic mocks base method.
-func (m *MockService) CreateMnemonic(ctx context.Context, length, language string) (*wallet.Mnemonic, error) {
+func (m *MockService) CreateMnemonic(ctx context.Context, length, language string) (*wallet.CreatedMnemonicDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMnemonic", ctx, length, language)
-	ret0, _ := ret[0].(*wallet.Mnemonic)
+	ret0, _ := ret[0].(*wallet.CreatedMnemonicDTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -51,10 +51,10 @@ func (mr *MockServiceMockRecorder) CreateMnemonic(ctx, length, language interfac
 }
 
 // CreateWallet mocks base method.
-func (m *MockService) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*wallet.Wallet, error) {
+func (m *MockService) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*wallet.DTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWallet", ctx, walletName, mnemonic)
-	ret0, _ := ret[0].(*wallet.Wallet)
+	ret0, _ := ret[0].(*wallet.DTO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -1,22 +1,27 @@
 package wallet
 
 import (
-	"context"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
+	gErrors "errors"
 	"net/http"
 	"nn-blockchain-api/pkg/errors"
 	"nn-blockchain-api/pkg/respond"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
 	walletSvc Service
 }
 
-func NewHandler(walletSvc Service) *Handler {
+func NewHandler(walletSvc Service) (*Handler, error) {
+	if walletSvc == nil {
+		return nil, gErrors.New("invalid wallet service")
+	}
+
 	return &Handler{
 		walletSvc: walletSvc,
-	}
+	}, nil
 }
 
 func (h *Handler) SetupRoutes(router chi.Router) {
@@ -38,7 +43,7 @@ func (h *Handler) CreateWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	wallet, err := h.walletSvc.CreateWallet(context.Background(), dto.Name, &dto.Mnemonic)
+	wallet, err := h.walletSvc.CreateWallet(r.Context(), dto.Name, &dto.Mnemonic)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), errors.NewNotFound(err.Error()))
 		return
@@ -61,7 +66,7 @@ func (h *Handler) CreateMnemonic(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mnemonic, err := h.walletSvc.CreateMnemonic(context.Background(), dto.Length, dto.Language)
+	mnemonic, err := h.walletSvc.CreateMnemonic(r.Context(), dto.Length, dto.Language)
 	if err != nil {
 		respond.Respond(w, errors.HTTPCode(err), errors.NewInternal(err.Error()))
 		return

@@ -8,10 +8,13 @@ import (
 
 func TestInit(t *testing.T) {
 	type env struct {
-		port        string
-		environment string
-		gRpcHost    string
-		ethEndpoint string
+		port               string
+		appEnv             string
+		gRpcHost           string
+		btcRpcEndpointTest string
+		btcRpcEndpointMain string
+		btcRpcUser         string
+		btcRpcPassword     string
 	}
 
 	type args struct {
@@ -20,9 +23,12 @@ func TestInit(t *testing.T) {
 
 	setEnv := func(env env) {
 		os.Setenv("PORT", env.port)
-		os.Setenv("ENVIRONMENT", env.environment)
+		os.Setenv("APP_ENV", env.appEnv)
 		os.Setenv("GRPC_HOST", env.gRpcHost)
-		os.Setenv("ETH_ENDPOINT", env.ethEndpoint)
+		os.Setenv("BTC_RPC_ENDPOINT_TEST", env.btcRpcEndpointTest)
+		os.Setenv("BTC_RPC_ENDPOINT_MAIN", env.btcRpcEndpointMain)
+		os.Setenv("BTC_RPC_USER", env.btcRpcUser)
+		os.Setenv("BTC_RPC_PASSWORD", env.btcRpcPassword)
 	}
 
 	tests := []struct {
@@ -35,17 +41,27 @@ func TestInit(t *testing.T) {
 			name: "Test config file!",
 			args: args{
 				env: env{
-					port:        ":5000",
-					environment: "development",
-					gRpcHost:    "localhost:123321",
-					ethEndpoint: "localhost:7545",
+					port:               ":5000",
+					appEnv:             "development",
+					gRpcHost:           "localhost:123321",
+					btcRpcEndpointTest: "http://localhost",
+					btcRpcEndpointMain: "http://localhost",
+					btcRpcUser:         "user",
+					btcRpcPassword:     "password",
 				},
 			},
 			want: &Config{
-				PORT:        ":5000",
-				Environment: "development",
-				GRpcHost:    "localhost:123321",
-				EthEndpoint: "localhost:7545",
+				PORT:   ":5000",
+				AppEnv: "development",
+				GRps: GRps{
+					GRpcHost: "localhost:123321",
+				},
+				BtcRpc: BtcRpc{
+					BtcRpcEndpointTest: "http://localhost",
+					BtcRpcEndpointMain: "http://localhost",
+					BtcRpcUser:         "user",
+					BtcRpcPassword:     "password",
+				},
 			},
 		},
 	}
@@ -54,7 +70,7 @@ func TestInit(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			setEnv(test.args.env)
 
-			got, err := Get("..")
+			got, err := Get()
 			if (err != nil) != test.wantError {
 				t.Errorf("Init() error = %v, wantErr %v", err, test.wantError)
 
