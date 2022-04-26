@@ -22,7 +22,7 @@ type BaseResponseWithBoolResult struct {
 
 type BaseResponseWithArrayResult struct {
 	BaseResponse
-	Result []string `json:"result,array"`
+	Result []string `json:"result"`
 }
 
 type EthSyncResponse struct {
