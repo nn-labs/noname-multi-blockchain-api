@@ -11,7 +11,7 @@ func TestGetEthTransactionByBlockNumberAndIndex(t *testing.T) {
 		"0x29c", // 668
 		"0x0",   // 0
 	}
-	baseResponse, err := getEthTransactionByBlockHashAndIndex(ethClient, params)
+	baseResponse, err := getEthTransactionByBlockNumberAndIndex(ethClient, params)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
