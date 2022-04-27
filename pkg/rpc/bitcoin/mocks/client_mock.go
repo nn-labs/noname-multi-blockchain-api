@@ -15,31 +15,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockIBtcClient is a mock of IBtcClient interface.
-type MockIBtcClient struct {
+// MockClient is a mock of Client interface.
+type MockClient struct {
 	ctrl     *gomock.Controller
-	recorder *MockIBtcClientMockRecorder
+	recorder *MockClientMockRecorder
 }
 
-// MockIBtcClientMockRecorder is the mock recorder for MockIBtcClient.
-type MockIBtcClientMockRecorder struct {
-	mock *MockIBtcClient
+// MockClientMockRecorder is the mock recorder for MockClient.
+type MockClientMockRecorder struct {
+	mock *MockClient
 }
 
-// NewMockIBtcClient creates a new mock instance.
-func NewMockIBtcClient(ctrl *gomock.Controller) *MockIBtcClient {
-	mock := &MockIBtcClient{ctrl: ctrl}
-	mock.recorder = &MockIBtcClientMockRecorder{mock}
+// NewMockClient creates a new mock instance.
+func NewMockClient(ctrl *gomock.Controller) *MockClient {
+	mock := &MockClient{ctrl: ctrl}
+	mock.recorder = &MockClientMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIBtcClient) EXPECT() *MockIBtcClientMockRecorder {
+func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
 }
 
 // EncodeBaseRequest mocks base method.
-func (m *MockIBtcClient) EncodeBaseRequest(request rpc_bitcoin.BaseRequest) (*bytes.Buffer, error) {
+func (m *MockClient) EncodeBaseRequest(request rpc_bitcoin.BaseRequest) (*bytes.Buffer, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EncodeBaseRequest", request)
 	ret0, _ := ret[0].(*bytes.Buffer)
@@ -48,13 +48,13 @@ func (m *MockIBtcClient) EncodeBaseRequest(request rpc_bitcoin.BaseRequest) (*by
 }
 
 // EncodeBaseRequest indicates an expected call of EncodeBaseRequest.
-func (mr *MockIBtcClientMockRecorder) EncodeBaseRequest(request interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) EncodeBaseRequest(request interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EncodeBaseRequest", reflect.TypeOf((*MockIBtcClient)(nil).EncodeBaseRequest), request)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EncodeBaseRequest", reflect.TypeOf((*MockClient)(nil).EncodeBaseRequest), request)
 }
 
 // Send mocks base method.
-func (m *MockIBtcClient) Send(ctx context.Context, body io.Reader, walletId, network string) (*http.Response, error) {
+func (m *MockClient) Send(ctx context.Context, body io.Reader, walletId, network string) (*http.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Send", ctx, body, walletId, network)
 	ret0, _ := ret[0].(*http.Response)
@@ -63,7 +63,7 @@ func (m *MockIBtcClient) Send(ctx context.Context, body io.Reader, walletId, net
 }
 
 // Send indicates an expected call of Send.
-func (mr *MockIBtcClientMockRecorder) Send(ctx, body, walletId, network interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Send(ctx, body, walletId, network interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockIBtcClient)(nil).Send), ctx, body, walletId, network)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockClient)(nil).Send), ctx, body, walletId, network)
 }

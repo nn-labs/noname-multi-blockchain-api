@@ -10,7 +10,14 @@ import (
 )
 
 //go:generate mockgen -source=client.go -destination=mocks/client_mock.go
-type btcClient struct {
+
+type Client interface {
+	Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error)
+	EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error)
+	//DecodeBaseResponse(response *http.Response, msg interface{}) (*BaseResponse, error)
+}
+
+type client struct {
 	btcEndpointTestNet string
 	btcEndpointMainNet string
 	btcUser            string
@@ -29,13 +36,7 @@ type BaseResponse struct {
 	Result  string `json:"result"`
 }
 
-type IBtcClient interface {
-	Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error)
-	EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error)
-	//DecodeBaseResponse(response *http.Response, msg interface{}) (*BaseResponse, error)
-}
-
-func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword string) (IBtcClient, error) {
+func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword string) (Client, error) {
 	if btcEndpointTestNet == "" {
 		return nil, errors.NewInternal("failed check btc test net endpoint")
 	}
@@ -49,7 +50,7 @@ func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword s
 		return nil, errors.NewInternal("failed check btc password")
 	}
 
-	return &btcClient{
+	return &client{
 		btcEndpointTestNet: btcEndpointTestNet,
 		btcEndpointMainNet: btcEndpointMainNet,
 		btcUser:            btcUser,
@@ -57,7 +58,7 @@ func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword s
 	}, nil
 }
 
-func (btc *btcClient) Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error) {
+func (btc *client) Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error) {
 	var endPoint string
 
 	if network == "main" {
@@ -90,7 +91,7 @@ func (btc *btcClient) Send(ctx context.Context, body io.Reader, walletId string,
 	return resp, nil
 }
 
-func (btc *btcClient) EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error) {
+func (btc *client) EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error) {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
