@@ -12,10 +12,10 @@ import (
 type Client interface {
 	Send(ctx context.Context, body io.Reader, network string) (*http.Response, error)
 	EncodeBaseRequest(request interface{}) (*bytes.Buffer, error)
-	DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error)
-	DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error)
-	DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error)
-	DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error)
+	//DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error)
+	//DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error)
+	//DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error)
+	//DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error)
 }
 
 type client struct {
@@ -76,42 +76,42 @@ func (c *client) EncodeBaseRequest(request interface{}) (*bytes.Buffer, error) {
 	return reqBody, nil
 }
 
-func (c *client) DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error) {
-	var baseResponse BaseResponseWithIntResult
-	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return &baseResponse, nil
-}
-
-func (c *client) DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error) {
-	var baseResponse BaseResponseWithStringResult
-	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return &baseResponse, nil
-}
-
-func (c *client) DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error) {
-	var baseResponse BaseResponseWithBoolResult
-	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return &baseResponse, nil
-}
-
-func (c *client) DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error) {
-	var baseResponse BaseResponseWithArrayResult
-	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	return &baseResponse, nil
-}
+//func (c *client) DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error) {
+//	var baseResponse BaseResponseWithIntResult
+//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &baseResponse, nil
+//}
+//
+//func (c *client) DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error) {
+//	var baseResponse BaseResponseWithStringResult
+//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &baseResponse, nil
+//}
+//
+//func (c *client) DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error) {
+//	var baseResponse BaseResponseWithBoolResult
+//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &baseResponse, nil
+//}
+//
+//func (c *client) DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error) {
+//	var baseResponse BaseResponseWithArrayResult
+//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return &baseResponse, nil
+//}
