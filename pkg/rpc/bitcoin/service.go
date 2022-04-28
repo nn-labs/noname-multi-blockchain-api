@@ -21,6 +21,8 @@ import (
 type Service interface {
 	Status(ctx context.Context, network string) (*StatusNode, error)
 
+	GetCurrentFee(ctx context.Context, network string) (*float64, error)
+
 	CreateTransaction(ctx context.Context, utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error)
 	//CreateTransaction(ctx context.Context,inputs []map[string]interface{}, outputs []map[string]string, network string) (string, error)
 	DecodeTransaction(ctx context.Context, tx string, network string) (*DecodedTx, error)
@@ -86,11 +88,82 @@ func (s *service) Status(ctx context.Context, network string) (*StatusNode, erro
 	return &msg.Result, nil
 }
 
+func (s *service) GetCurrentFee(ctx context.Context, network string) (*float64, error) {
+	req := BaseRequest{
+		JsonRpc: "2.0",
+		Method:  "estimatesmartfee",
+		Params:  []interface{}{2},
+	}
+
+	msg := struct {
+		Result struct {
+			Feerate float64 `json:"feerate"`
+			Blocks  int64   `json:"blocks"`
+		}
+		Error struct {
+			Message string `json:"message"`
+		} `json:"error"`
+	}{}
+
+	body, err := s.btcClient.EncodeBaseRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := s.btcClient.Send(ctx, body, "", network)
+	if err != nil {
+		return nil, err
+	}
+
+	defer response.Body.Close()
+
+	err = json.NewDecoder(response.Body).Decode(&msg)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Error.Message != "" {
+		return nil, err
+	}
+
+	var fee float64
+	fee = msg.Result.Feerate
+	// sanity check
+	if fee > 0.05 {
+		fee = 0.1
+	} else if fee < 0 {
+		fee = 0
+	}
+	//fmt.Printf("fee: %f\n", fee)
+
+	if fee == 0 {
+		return &fee, err
+	}
+
+	return &fee, nil
+}
+
+func (s *service) getCurrentFeeRate(ctx context.Context, network string) (*big.Int, error) {
+	fee, err := s.GetCurrentFee(ctx, network)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert to satoshis to bytes
+	// feeRate := big.NewInt(int64(msg.Result * 1.0E8))
+	// convert to satoshis to kb
+	feeRate := big.NewInt(int64(*fee * 1.0e5))
+
+	//fmt.Printf("fee rate: %s\n", feeRate)
+
+	return feeRate, nil
+}
+
 func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress, toAddress string, amount int64, network string) (*string, *float64, error) {
 	chainParams := &chaincfg.TestNet3Params
 
 	// Get fee
-	feeRate, err := GetCurrentFeeRate(ctx, s.btcClient, network)
+	feeRate, err := s.getCurrentFeeRate(ctx, network)
 	if err != nil {
 		return nil, nil, errors.NewInternal(err.Error())
 	}
