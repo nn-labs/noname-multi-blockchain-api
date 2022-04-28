@@ -32,7 +32,7 @@ func main() {
 	}
 
 	// Rpc clients
-	btcRpcClient, err := bitcoin_rpc.NewBtcClient(cfg.BtcRpc.BtcRpcEndpointTest, cfg.BtcRpc.BtcRpcEndpointMain, cfg.BtcRpc.BtcRpcUser, cfg.BtcRpc.BtcRpcPassword)
+	btcRpcClient, err := bitcoin_rpc.NewClient(cfg.BtcRpc.BtcRpcEndpointTest, cfg.BtcRpc.BtcRpcEndpointMain, cfg.BtcRpc.BtcRpcUser, cfg.BtcRpc.BtcRpcPassword)
 	if err != nil {
 		logger.Fatalf("failed to set-up btc rpc client: %v", err)
 	}
@@ -42,19 +42,6 @@ func main() {
 	if err != nil {
 		logger.Fatalf("failed to create bitcoin service: %v", err)
 	}
-
-	// Set-up Route
-	router := chi.NewRouter()
-	router.Use(middleware.Logger)
-	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"OPTIONS", "GET", "POST", "PATCH", "DELETE"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Access-Control-Allow-Origin"},
-		ExposedHeaders:   []string{"Content-Type", "JWT-Token"},
-		AllowCredentials: false,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	}))
-	//router.Use(middleware.BasicAuth("authentication", map[string]string{cfg.User: cfg.Password}))
 
 	// Services
 	walletSvc, err := wallet.NewService(walletClient, logger)
@@ -79,6 +66,19 @@ func main() {
 	if err != nil {
 		logger.Fatalf("failed to create bitcoin handler: %v", err)
 	}
+
+	// Set-up Route
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"OPTIONS", "GET", "POST", "PATCH", "DELETE"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Access-Control-Allow-Origin"},
+		ExposedHeaders:   []string{"Content-Type", "JWT-Token"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+	//router.Use(middleware.BasicAuth("authentication", map[string]string{cfg.User: cfg.Password}))
 
 	router.Route("/api/v1", func(r chi.Router) {
 		healthHandler.SetupRoutes(r)

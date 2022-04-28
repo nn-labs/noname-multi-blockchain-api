@@ -18,29 +18,17 @@ type Client interface {
 }
 
 type client struct {
-	btcEndpointTestNet string
-	btcEndpointMainNet string
-	btcUser            string
-	btcPassword        string
+	btcRpcEndpointTestNet string
+	btcRpcEndpointMainNet string
+	btcUser               string
+	btcPassword           string
 }
 
-type BaseRequest struct {
-	JsonRpc string        `json:"jsonrpc"`
-	Method  string        `json:"method"`
-	Params  []interface{} `json:"params"`
-}
-
-type BaseResponse struct {
-	Id      string `json:"id"`
-	JsonRpc string `json:"jsonrpc"`
-	Result  string `json:"result"`
-}
-
-func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword string) (Client, error) {
-	if btcEndpointTestNet == "" {
+func NewClient(btcRpcEndpointTestNet, btcRpcEndpointMainNet, btcUser, btcPassword string) (Client, error) {
+	if btcRpcEndpointTestNet == "" {
 		return nil, errors.NewInternal("failed check btc test net endpoint")
 	}
-	if btcEndpointTestNet == "" {
+	if btcRpcEndpointMainNet == "" {
 		return nil, errors.NewInternal("failed check btc main net endpoint")
 	}
 	if btcUser == "" {
@@ -51,20 +39,20 @@ func NewBtcClient(btcEndpointTestNet, btcEndpointMainNet, btcUser, btcPassword s
 	}
 
 	return &client{
-		btcEndpointTestNet: btcEndpointTestNet,
-		btcEndpointMainNet: btcEndpointMainNet,
-		btcUser:            btcUser,
-		btcPassword:        btcPassword,
+		btcRpcEndpointTestNet: btcRpcEndpointTestNet,
+		btcRpcEndpointMainNet: btcRpcEndpointMainNet,
+		btcUser:               btcUser,
+		btcPassword:           btcPassword,
 	}, nil
 }
 
-func (btc *client) Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error) {
+func (c *client) Send(ctx context.Context, body io.Reader, walletId string, network string) (*http.Response, error) {
 	var endPoint string
 
 	if network == "main" {
-		endPoint = btc.btcEndpointMainNet
+		endPoint = c.btcRpcEndpointMainNet
 	} else {
-		endPoint = btc.btcEndpointTestNet
+		endPoint = c.btcRpcEndpointTestNet
 	}
 
 	if walletId != "" {
@@ -79,7 +67,7 @@ func (btc *client) Send(ctx context.Context, body io.Reader, walletId string, ne
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.SetBasicAuth(btc.btcUser, btc.btcPassword)
+	req.SetBasicAuth(c.btcUser, c.btcPassword)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -91,7 +79,7 @@ func (btc *client) Send(ctx context.Context, body io.Reader, walletId string, ne
 	return resp, nil
 }
 
-func (btc *client) EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error) {
+func (c *client) EncodeBaseRequest(request BaseRequest) (*bytes.Buffer, error) {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return nil, err

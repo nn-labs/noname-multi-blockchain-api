@@ -1,5 +1,17 @@
 package rpc_bitcoin
 
+type BaseRequest struct {
+	JsonRpc string        `json:"jsonrpc"`
+	Method  string        `json:"method"`
+	Params  []interface{} `json:"params"`
+}
+
+type BaseResponse struct {
+	Id      string `json:"id"`
+	JsonRpc string `json:"jsonrpc"`
+	Result  string `json:"result"`
+}
+
 type StatusNode struct {
 	Chain                string      `json:"chain"`
 	Blocks               interface{} `json:"blocks"`

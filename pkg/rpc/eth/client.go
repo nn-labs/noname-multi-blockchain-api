@@ -2,18 +2,15 @@ package eth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
 
-type ethClient struct {
-	endpoint string
-}
-
-type IEthClient interface {
-	Send(body io.Reader) (*http.Response, error)
-	GetWeb3ClientVersion() (*BaseResponseWithStringResult, error)
+type Client interface {
+	Send(ctx context.Context, body io.Reader, network string) (*http.Response, error)
 	EncodeBaseRequest(request interface{}) (*bytes.Buffer, error)
 	DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error)
 	DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error)
@@ -21,40 +18,54 @@ type IEthClient interface {
 	DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error)
 }
 
-func NewEthClient(endpoint string) IEthClient {
-	return &ethClient{
-		endpoint: endpoint,
-	}
+type client struct {
+	ethRpcEndpointTestNet string
+	ethRpcEndpointMainNet string
 }
 
-func (e *ethClient) Send(body io.Reader) (*http.Response, error) {
-	resp, err := http.Post(e.endpoint, "application/json", body)
-	return resp, err
-}
-
-func (e *ethClient) GetWeb3ClientVersion() (*BaseResponseWithStringResult, error) {
-	request := BaseRequest{
-		JsonRpc: "2.0",
-		Method:  "web3_clientVersion",
-		Params:  []string{},
-		Id:      "67",
+func NewClient(ethRpcEndpointTestNet string, ethRpcEndpointMainNet string) (Client, error) {
+	if ethRpcEndpointTestNet == "" {
+		return nil, errors.New("invalid ethereum testnet endpoint")
+	}
+	if ethRpcEndpointMainNet == "" {
+		return nil, errors.New("invalid ethereum mainnet endpoint")
 	}
 
-	reqBody, err := e.EncodeBaseRequest(request)
+	return &client{
+		ethRpcEndpointTestNet: ethRpcEndpointTestNet,
+		ethRpcEndpointMainNet: ethRpcEndpointMainNet,
+	}, nil
+}
+
+func (c *client) Send(ctx context.Context, body io.Reader, network string) (*http.Response, error) {
+	var endPoint string
+
+	if network == "main" {
+		endPoint = c.ethRpcEndpointMainNet
+	} else {
+		endPoint = c.ethRpcEndpointTestNet
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequestWithContext(ctx, "POST", endPoint, body)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := e.Send(reqBody)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	return e.DecodeBaseResponseWithStringResult(resp)
+	//defer resp.Body.Close()
+
+	return resp, nil
 }
 
-func (e *ethClient) EncodeBaseRequest(request interface{}) (*bytes.Buffer, error) {
+func (c *client) EncodeBaseRequest(request interface{}) (*bytes.Buffer, error) {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -65,7 +76,7 @@ func (e *ethClient) EncodeBaseRequest(request interface{}) (*bytes.Buffer, error
 	return reqBody, nil
 }
 
-func (e *ethClient) DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error) {
+func (c *client) DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error) {
 	var baseResponse BaseResponseWithIntResult
 	err := json.NewDecoder(response.Body).Decode(&baseResponse)
 	if err != nil {
@@ -75,7 +86,7 @@ func (e *ethClient) DecodeBaseResponseWithIntResult(response *http.Response) (*B
 	return &baseResponse, nil
 }
 
-func (e *ethClient) DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error) {
+func (c *client) DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error) {
 	var baseResponse BaseResponseWithStringResult
 	err := json.NewDecoder(response.Body).Decode(&baseResponse)
 	if err != nil {
@@ -85,7 +96,7 @@ func (e *ethClient) DecodeBaseResponseWithStringResult(response *http.Response) 
 	return &baseResponse, nil
 }
 
-func (e *ethClient) DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error) {
+func (c *client) DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error) {
 	var baseResponse BaseResponseWithBoolResult
 	err := json.NewDecoder(response.Body).Decode(&baseResponse)
 	if err != nil {
@@ -95,7 +106,7 @@ func (e *ethClient) DecodeBaseResponseWithBoolResult(response *http.Response) (*
 	return &baseResponse, nil
 }
 
-func (e *ethClient) DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error) {
+func (c *client) DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error) {
 	var baseResponse BaseResponseWithArrayResult
 	err := json.NewDecoder(response.Body).Decode(&baseResponse)
 	if err != nil {

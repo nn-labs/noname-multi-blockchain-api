@@ -25,11 +25,8 @@ type BaseResponseWithArrayResult struct {
 	Result []string `json:"result"`
 }
 
-type EthSyncResponse struct {
-	BaseResponse
-	Result struct {
-		StartingBlock string `json:"startingBlock"`
-		CurrentBlock  string `json:"currentBlock"`
-		HighestBlock  string `json:"highestBlock"`
-	}
+type StatusNode struct {
+	StartingBlock string `json:"startingBlock"`
+	CurrentBlock  string `json:"currentBlock"`
+	HighestBlock  string `json:"highestBlock"`
 }
