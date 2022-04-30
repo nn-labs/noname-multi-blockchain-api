@@ -32,13 +32,13 @@ func TestNewService(t *testing.T) {
 			},
 		},
 		{
-			name:      "should return invalid btc service",
+			name:      "should return invalid btc rpc service",
 			btcRpcSvc: nil,
 			log:       logrus.New(),
 			expect: func(t *testing.T, s Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
-				assert.EqualError(t, err, "code: 500; status: internal_error; message: invalid btc service")
+				assert.EqualError(t, err, "code: 500; status: internal_error; message: invalid btc rpc service")
 			},
 		},
 		{

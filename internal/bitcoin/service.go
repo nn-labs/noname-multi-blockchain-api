@@ -2,10 +2,9 @@ package bitcoin
 
 import (
 	"context"
-	"nn-blockchain-api/pkg/errors"
-	rpc_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin"
-
 	"github.com/sirupsen/logrus"
+	"nn-blockchain-api/pkg/errors"
+	bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin"
 )
 
 //go:generate mockgen -source=service.go -destination=mocks/service_mock.go
@@ -34,13 +33,13 @@ type Service interface {
 }
 
 type service struct {
+	btcRpcSvc bitcoin_rpc.Service
 	log       *logrus.Logger
-	btcRpcSvc rpc_bitcoin.Service
 }
 
-func NewService(btcRpcSvc rpc_bitcoin.Service, log *logrus.Logger) (Service, error) {
+func NewService(btcRpcSvc bitcoin_rpc.Service, log *logrus.Logger) (Service, error) {
 	if btcRpcSvc == nil {
-		return nil, errors.NewInternal("invalid btc service")
+		return nil, errors.NewInternal("invalid btc rpc service")
 	}
 	if log == nil {
 		return nil, errors.NewInternal("invalid logger")
@@ -48,11 +47,11 @@ func NewService(btcRpcSvc rpc_bitcoin.Service, log *logrus.Logger) (Service, err
 	return &service{btcRpcSvc: btcRpcSvc, log: log}, nil
 }
 
-func (svc *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*StatusNodeInfoDTO, error) {
-	status, err := svc.btcRpcSvc.Status(ctx, dto.Network)
+func (s *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*StatusNodeInfoDTO, error) {
+	status, err := s.btcRpcSvc.Status(ctx, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf("failed check node status")
-		return nil, errors.WithMessage(ErrFailedGetStatusNode, err.Error())
+		s.log.WithContext(ctx).Errorf("failed check node status: %v", err)
+		return nil, ErrFailedGetStatusNode
 	}
 
 	return &StatusNodeInfoDTO{
@@ -65,11 +64,11 @@ func (svc *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*Status
 	}, nil
 }
 
-func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error) {
-	tx, fee, err := svc.btcRpcSvc.CreateTransaction(ctx, rpc_bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
+func (s *service) CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error) {
+	tx, fee, err := s.btcRpcSvc.CreateTransaction(ctx, bitcoin_rpc.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedCreateTx, err.Error())
+		s.log.WithContext(ctx).Errorf("failed create transaction: %v", err)
+		return nil, ErrFailedCreateTx
 	}
 
 	return &CreatedRawTransactionDTO{
@@ -78,11 +77,11 @@ func (svc *service) CreateTransaction(ctx context.Context, dto *CreateRawTransac
 	}, nil
 }
 
-func (svc *service) DecodeTransaction(ctx context.Context, dto *DecodeRawTransactionDTO) (*DecodedRawTransactionDTO, error) {
-	decodedTx, err := svc.btcRpcSvc.DecodeTransaction(ctx, dto.Tx, dto.Network)
+func (s *service) DecodeTransaction(ctx context.Context, dto *DecodeRawTransactionDTO) (*DecodedRawTransactionDTO, error) {
+	decodedTx, err := s.btcRpcSvc.DecodeTransaction(ctx, dto.Tx, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedDecodeTx, err.Error())
+		s.log.WithContext(ctx).Errorf("failed decode transaction: %v", err)
+		return nil, ErrFailedDecodeTx
 	}
 
 	return &DecodedRawTransactionDTO{
@@ -98,11 +97,11 @@ func (svc *service) DecodeTransaction(ctx context.Context, dto *DecodeRawTransac
 	}, nil
 }
 
-func (svc *service) FoundForRawTransaction(ctx context.Context, dto *FundForRawTransactionDTO) (*FundedRawTransactionDTO, error) {
-	tx, fee, err := svc.btcRpcSvc.FundForTransaction(ctx, dto.CreatedTxHex, dto.ChangeAddress, dto.Network)
+func (s *service) FoundForRawTransaction(ctx context.Context, dto *FundForRawTransactionDTO) (*FundedRawTransactionDTO, error) {
+	tx, fee, err := s.btcRpcSvc.FundForTransaction(ctx, dto.CreatedTxHex, dto.ChangeAddress, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedFundForTx, err.Error())
+		s.log.WithContext(ctx).Errorf("failed found for transaction: %v", err)
+		return nil, ErrFailedFundForTx
 	}
 
 	return &FundedRawTransactionDTO{
@@ -111,16 +110,16 @@ func (svc *service) FoundForRawTransaction(ctx context.Context, dto *FundForRawT
 	}, nil
 }
 
-func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error) {
+func (s *service) SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error) {
 	//var utxos []map[string]interface{}
 	//for _, s := range dto.Utxo {
 	//	utxos = append(utxos, map[string]interface{}{"txid": s.TxId, "vout": s.Vout, "scriptPubKey": s.PKScript, "amount": s.Amount})
 	//}
 
-	tx, err := svc.btcRpcSvc.SignTransaction(ctx, dto.Tx, dto.PrivateKey, rpc_bitcoin.UTXO(dto.Utxo), dto.Network)
+	tx, err := s.btcRpcSvc.SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin_rpc.UTXO(dto.Utxo), dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedSignTx, err.Error())
+		s.log.WithContext(ctx).Errorf("failed sign transaction: %v", err)
+		return nil, ErrFailedSignTx
 	}
 
 	return &SignedRawTransactionDTO{
@@ -128,11 +127,11 @@ func (svc *service) SignTransaction(ctx context.Context, dto *SignRawTransaction
 	}, nil
 }
 
-func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error) {
-	txId, err := svc.btcRpcSvc.SendTransaction(ctx, dto.SignedTx, dto.Network)
+func (s *service) SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error) {
+	txId, err := s.btcRpcSvc.SendTransaction(ctx, dto.SignedTx, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedSendTx, err.Error())
+		s.log.WithContext(ctx).Errorf("failed send transaction: %v", err)
+		return nil, ErrFailedSendTx
 	}
 
 	return &SentRawTransactionDTO{
@@ -140,11 +139,11 @@ func (svc *service) SendTransaction(ctx context.Context, dto *SendRawTransaction
 	}, nil
 }
 
-func (svc *service) WalletInfo(ctx context.Context, dto *WalletDTO) (*WalletInfoDTO, error) {
-	info, err := svc.btcRpcSvc.WalletInfo(ctx, dto.WalletId, dto.Network)
+func (s *service) WalletInfo(ctx context.Context, dto *WalletDTO) (*WalletInfoDTO, error) {
+	info, err := s.btcRpcSvc.WalletInfo(ctx, dto.WalletId, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedGetWalletInfo, err.Error())
+		s.log.WithContext(ctx).Errorf("failed get wallet info: %v", err)
+		return nil, ErrFailedGetWalletInfo
 	}
 
 	return &WalletInfoDTO{
@@ -167,21 +166,21 @@ func (svc *service) WalletInfo(ctx context.Context, dto *WalletDTO) (*WalletInfo
 	}, nil
 }
 
-func (svc *service) CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error) {
-	walletId, err := svc.btcRpcSvc.CreateWallet(ctx, dto.Network)
+func (s *service) CreateWallet(ctx context.Context, dto *CreateWalletDTO) (*CreatedWalletInfoDTO, error) {
+	walletId, err := s.btcRpcSvc.CreateWallet(ctx, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedCreateWallet, err.Error())
+		s.log.WithContext(ctx).Errorf("failed create wallet: %v", err)
+		return nil, ErrFailedCreateWallet
 	}
 
 	return &CreatedWalletInfoDTO{WalletId: walletId}, nil
 }
 
-func (svc *service) LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWalletInfoDTO, error) {
-	err := svc.btcRpcSvc.LoadWallet(ctx, dto.WalletId, dto.Network)
+func (s *service) LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWalletInfoDTO, error) {
+	err := s.btcRpcSvc.LoadWallet(ctx, dto.WalletId, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedLoadWallet, err.Error())
+		s.log.WithContext(ctx).Errorf("failed load wallet: %v", err)
+		return nil, ErrFailedLoadWallet
 	}
 
 	return &LoadWalletInfoDTO{
@@ -189,11 +188,11 @@ func (svc *service) LoadWaller(ctx context.Context, dto *LoadWalletDTO) (*LoadWa
 	}, nil
 }
 
-func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*ImportAddressInfoDTO, error) {
-	err := svc.btcRpcSvc.ImportAddress(ctx, dto.Address, dto.WalletId, dto.Network)
+func (s *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*ImportAddressInfoDTO, error) {
+	err := s.btcRpcSvc.ImportAddress(ctx, dto.Address, dto.WalletId, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedImportAddress, err.Error())
+		s.log.WithContext(ctx).Errorf("failed import wallet: %v", err)
+		return nil, ErrFailedImportAddress
 	}
 
 	return &ImportAddressInfoDTO{
@@ -201,11 +200,11 @@ func (svc *service) ImportAddress(ctx context.Context, dto *ImportAddressDTO) (*
 	}, nil
 }
 
-func (svc *service) RescanWallet(ctx context.Context, dto *RescanWalletDTO) (*RescanWalletInfoDTO, error) {
-	err := svc.btcRpcSvc.RescanWallet(ctx, dto.WalletId, dto.Network)
+func (s *service) RescanWallet(ctx context.Context, dto *RescanWalletDTO) (*RescanWalletInfoDTO, error) {
+	err := s.btcRpcSvc.RescanWallet(ctx, dto.WalletId, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedRescanWallet, err.Error())
+		s.log.WithContext(ctx).Errorf("failed rescan wallet: %v", err)
+		return nil, ErrFailedRescanWallet
 	}
 
 	return &RescanWalletInfoDTO{
@@ -214,11 +213,11 @@ func (svc *service) RescanWallet(ctx context.Context, dto *RescanWalletDTO) (*Re
 	}, nil
 }
 
-func (svc *service) ListUnspent(ctx context.Context, dto *ListUnspentDTO) (*ListUnspentInfoDTO, error) {
-	list, err := svc.btcRpcSvc.ListUnspent(ctx, dto.Address, dto.WalletId, dto.Network)
+func (s *service) ListUnspent(ctx context.Context, dto *ListUnspentDTO) (*ListUnspentInfoDTO, error) {
+	list, err := s.btcRpcSvc.ListUnspent(ctx, dto.Address, dto.WalletId, dto.Network)
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, errors.WithMessage(ErrFailedGetUnspent, err.Error())
+		s.log.WithContext(ctx).Errorf("failed get unspend list: %v", err)
+		return nil, ErrFailedGetUnspent
 	}
 
 	var result []*UnspentInfoDTO

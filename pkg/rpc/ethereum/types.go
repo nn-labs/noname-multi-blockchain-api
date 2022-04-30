@@ -1,10 +1,10 @@
-package eth
+package ethereum_rpc
 
 type BaseRequest struct {
-	JsonRpc string   `json:"jsonrpc"`
-	Method  string   `json:"method"`
-	Params  []string `json:"params"`
-	Id      string   `json:"id"`
+	JsonRpc string        `json:"jsonrpc"`
+	Method  string        `json:"method"`
+	Params  []interface{} `json:"params"`
+	Id      string        `json:"id"`
 }
 
 type BaseRequestWithMapParams struct {
@@ -40,9 +40,22 @@ type BaseResponseWithArrayResult struct {
 }
 
 type StatusNodeResponse struct {
-	StartingBlock string `json:"startingBlock"`
-	CurrentBlock  string `json:"currentBlock"`
-	HighestBlock  string `json:"highestBlock"`
+	CurrentBlock        string `json:"currentBlock,omitempty"`
+	HealedBytecodeBytes string `json:"healedBytecodeBytes,omitempty"`
+	HealedBytecodes     string `json:"healedBytecodes,omitempty"`
+	HealedTrienodeBytes string `json:"healedTrienodeBytes,omitempty"`
+	HealedTrienodes     string `json:"healedTrienodes,omitempty"`
+	HealingBytecode     string `json:"healingBytecode,omitempty"`
+	HealingTrienodes    string `json:"healingTrienodes,omitempty"`
+	HighestBlock        string `json:"highestBlock,omitempty"`
+	StartingBlock       string `json:"startingBlock,omitempty"`
+	SyncedAccountBytes  string `json:"syncedAccountBytes,omitempty"`
+	SyncedAccounts      string `json:"syncedAccounts,omitempty"`
+	SyncedBytecodeBytes string `json:"syncedBytecodeBytes,omitempty"`
+	SyncedBytecodes     string `json:"syncedBytecodes,omitempty"`
+	SyncedStorage       string `json:"syncedStorage,omitempty"`
+	SyncedStorageBytes  string `json:"syncedStorageBytes,omitempty"`
+	SyncMessage         string `json:"sync_message,omitempty"`
 }
 
 type TransactionByHashResponse struct {

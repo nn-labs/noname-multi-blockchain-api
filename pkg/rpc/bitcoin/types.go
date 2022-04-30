@@ -1,4 +1,4 @@
-package rpc_bitcoin
+package bitcoin_rpc
 
 type BaseRequest struct {
 	JsonRpc string        `json:"jsonrpc"`
@@ -8,7 +8,7 @@ type BaseRequest struct {
 
 type BaseResponse struct {
 	Id      string `json:"id"`
-	JsonRpc string `json:"jsonrpc"`
+	JsonRpc string `jbitcoin_rpcson:"jsonrpc"`
 	Result  string `json:"result"`
 }
 

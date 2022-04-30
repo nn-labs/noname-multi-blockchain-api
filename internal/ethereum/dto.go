@@ -41,3 +41,57 @@ func Validate(dto interface{}) error {
 	}
 	return nil
 }
+
+type StatusNodeDTO struct {
+	Network string `json:"network" validate:"required"`
+}
+
+type NodeInfoDTO struct {
+	CurrentBlock        string `json:"currentBlock,omitempty"`
+	HealedBytecodeBytes string `json:"healedBytecodeBytes,omitempty"`
+	HealedBytecodes     string `json:"healedBytecodes,omitempty"`
+	HealedTrienodeBytes string `json:"healedTrienodeBytes,omitempty"`
+	HealedTrienodes     string `json:"healedTrienodes,omitempty"`
+	HealingBytecode     string `json:"healingBytecode,omitempty"`
+	HealingTrienodes    string `json:"healingTrienodes,omitempty"`
+	HighestBlock        string `json:"highestBlock,omitempty"`
+	StartingBlock       string `json:"startingBlock,omitempty"`
+	SyncedAccountBytes  string `json:"syncedAccountBytes,omitempty"`
+	SyncedAccounts      string `json:"syncedAccounts,omitempty"`
+	SyncedBytecodeBytes string `json:"syncedBytecodeBytes,omitempty"`
+	SyncedBytecodes     string `json:"syncedBytecodes,omitempty"`
+	SyncedStorage       string `json:"syncedStorage,omitempty"`
+	SyncedStorageBytes  string `json:"syncedStorageBytes,omitempty"`
+	SyncMessage         string `json:"sync_message,omitempty"`
+}
+
+type CreateRawTransactionDTO struct {
+	FromAddress string  `json:"from_address" validate:"required"`
+	ToAddress   string  `json:"to_address" validate:"required"`
+	Amount      float64 `json:"amount" validate:"required"`
+	Network     string  `json:"network" validate:"required"`
+}
+
+type CreatedRawTransactionDTO struct {
+	Tx  string  `json:"tx"`
+	Fee float64 `json:"fee"`
+}
+
+type SignRawTransactionDTO struct {
+	Tx         string `json:"tx" validate:"required"`
+	PrivateKey string `json:"privateKey" validate:"required"`
+	Network    string `json:"network" validate:"required"`
+}
+
+type SignedRawTransactionDTO struct {
+	SignedTx string `json:"signed_tx"`
+}
+
+type SendRawTransactionDTO struct {
+	SignedTx string `json:"signed_tx" validate:"required"`
+	Network  string `json:"network" validate:"required"`
+}
+
+type SentRawTransactionDTO struct {
+	TxId string `json:"tx_id"`
+}

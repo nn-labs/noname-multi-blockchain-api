@@ -97,6 +97,21 @@ func (mr *MockServiceMockRecorder) FundForTransaction(ctx, createdTx, changeAddr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FundForTransaction", reflect.TypeOf((*MockService)(nil).FundForTransaction), ctx, createdTx, changeAddress, network)
 }
 
+// GetCurrentFee mocks base method.
+func (m *MockService) GetCurrentFee(ctx context.Context, network string) (*float64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrentFee", ctx, network)
+	ret0, _ := ret[0].(*float64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCurrentFee indicates an expected call of GetCurrentFee.
+func (mr *MockServiceMockRecorder) GetCurrentFee(ctx, network interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrentFee", reflect.TypeOf((*MockService)(nil).GetCurrentFee), ctx, network)
+}
+
 // ImportAddress mocks base method.
 func (m *MockService) ImportAddress(ctx context.Context, address, walletId, network string) error {
 	m.ctrl.T.Helper()

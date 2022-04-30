@@ -1,4 +1,4 @@
-package eth
+package ethereum_rpc
 
 import (
 	"bytes"

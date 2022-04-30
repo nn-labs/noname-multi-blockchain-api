@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"nn-blockchain-api/config"
 	"nn-blockchain-api/internal/bitcoin"
+	"nn-blockchain-api/internal/ethereum"
 	"nn-blockchain-api/internal/health"
 	"nn-blockchain-api/internal/wallet"
 	"nn-blockchain-api/pkg/grpc_client"
 	bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin"
+	ethereum_rpc "nn-blockchain-api/pkg/rpc/ethereum"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -32,24 +34,39 @@ func main() {
 	}
 
 	// Rpc clients
-	btcRpcClient, err := bitcoin_rpc.NewClient(cfg.BtcRpc.BtcRpcEndpointTest, cfg.BtcRpc.BtcRpcEndpointMain, cfg.BtcRpc.BtcRpcUser, cfg.BtcRpc.BtcRpcPassword)
+	bitcoinRpcClient, err := bitcoin_rpc.NewClient(cfg.BtcRpc.BtcRpcEndpointTest, cfg.BtcRpc.BtcRpcEndpointMain, cfg.BtcRpc.BtcRpcUser, cfg.BtcRpc.BtcRpcPassword)
+	if err != nil {
+		logger.Fatalf("failed to set-up btc rpc client: %v", err)
+	}
+
+	ethereumRpcClient, err := ethereum_rpc.NewClient(cfg.EthRpc.EthRpcEndpointTest, cfg.EthRpc.EthRpcEndpointMain)
 	if err != nil {
 		logger.Fatalf("failed to set-up btc rpc client: %v", err)
 	}
 
 	// Rpc services
-	bitcoinRpcService, err := bitcoin_rpc.NewService(btcRpcClient)
+	bitcoinRpcService, err := bitcoin_rpc.NewService(bitcoinRpcClient)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin service: %v", err)
+	}
+
+	ethereumRpcService, err := ethereum_rpc.NewService(ethereumRpcClient)
 	if err != nil {
 		logger.Fatalf("failed to create bitcoin service: %v", err)
 	}
 
 	// Services
-	walletSvc, err := wallet.NewService(walletClient, logger)
+	walletService, err := wallet.NewService(walletClient, logger)
 	if err != nil {
 		logger.Fatalf("failed to create wallet service: %v", err)
 	}
 
-	bitcoinSvc, err := bitcoin.NewService(bitcoinRpcService, logger)
+	bitcoinService, err := bitcoin.NewService(bitcoinRpcService, logger)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin service: %v", err)
+	}
+
+	ethereumService, err := ethereum.NewService(ethereumRpcService, logger)
 	if err != nil {
 		logger.Fatalf("failed to create bitcoin service: %v", err)
 	}
@@ -57,12 +74,17 @@ func main() {
 	// Handlers
 	healthHandler := health.NewHandler()
 
-	walletHandler, err := wallet.NewHandler(walletSvc)
+	walletHandler, err := wallet.NewHandler(walletService)
 	if err != nil {
 		logger.Fatalf("failed to create wallet handler: %v", err)
 	}
 
-	bitcoinHandler, err := bitcoin.NewHandler(bitcoinSvc)
+	bitcoinHandler, err := bitcoin.NewHandler(bitcoinService)
+	if err != nil {
+		logger.Fatalf("failed to create bitcoin handler: %v", err)
+	}
+
+	ethereumHandler, err := ethereum.NewHandler(ethereumService)
 	if err != nil {
 		logger.Fatalf("failed to create bitcoin handler: %v", err)
 	}
@@ -87,6 +109,10 @@ func main() {
 
 	router.Route("/api/v1/bitcoin", func(r chi.Router) {
 		bitcoinHandler.SetupRoutes(r)
+	})
+
+	router.Route("/api/v1/ethereum", func(r chi.Router) {
+		ethereumHandler.SetupRoutes(r)
 	})
 
 	// Start App

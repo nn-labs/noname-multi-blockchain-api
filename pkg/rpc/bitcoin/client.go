@@ -1,4 +1,4 @@
-package rpc_bitcoin
+package bitcoin_rpc
 
 import (
 	"bytes"
