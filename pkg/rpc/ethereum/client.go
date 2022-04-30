@@ -9,13 +9,10 @@ import (
 	"net/http"
 )
 
+//go:generate mockgen -source=client.go -destination=mocks/client_mock.go
 type Client interface {
 	Send(ctx context.Context, body io.Reader, network string) (*http.Response, error)
 	EncodeBaseRequest(request interface{}) (*bytes.Buffer, error)
-	//DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error)
-	//DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error)
-	//DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error)
-	//DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error)
 }
 
 type client struct {
@@ -25,10 +22,10 @@ type client struct {
 
 func NewClient(ethRpcEndpointTestNet string, ethRpcEndpointMainNet string) (Client, error) {
 	if ethRpcEndpointTestNet == "" {
-		return nil, errors.New("invalid ethereum testnet endpoint")
+		return nil, errors.New("invalid ethereum rpc testnet endpoint")
 	}
 	if ethRpcEndpointMainNet == "" {
-		return nil, errors.New("invalid ethereum mainnet endpoint")
+		return nil, errors.New("invalid ethereum rpc mainnet endpoint")
 	}
 
 	return &client{
@@ -75,43 +72,3 @@ func (c *client) EncodeBaseRequest(request interface{}) (*bytes.Buffer, error) {
 
 	return reqBody, nil
 }
-
-//func (c *client) DecodeBaseResponseWithIntResult(response *http.Response) (*BaseResponseWithIntResult, error) {
-//	var baseResponse BaseResponseWithIntResult
-//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &baseResponse, nil
-//}
-//
-//func (c *client) DecodeBaseResponseWithStringResult(response *http.Response) (*BaseResponseWithStringResult, error) {
-//	var baseResponse BaseResponseWithStringResult
-//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &baseResponse, nil
-//}
-//
-//func (c *client) DecodeBaseResponseWithBoolResult(response *http.Response) (*BaseResponseWithBoolResult, error) {
-//	var baseResponse BaseResponseWithBoolResult
-//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &baseResponse, nil
-//}
-//
-//func (c *client) DecodeBaseResponseWithArrayResult(response *http.Response) (*BaseResponseWithArrayResult, error) {
-//	var baseResponse BaseResponseWithArrayResult
-//	err := json.NewDecoder(response.Body).Decode(&baseResponse)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &baseResponse, nil
-//}

@@ -2,6 +2,7 @@ package ethereum
 
 import (
 	"context"
+	gErrors "errors"
 	"github.com/sirupsen/logrus"
 	"nn-blockchain-api/pkg/errors"
 	ethereum_rpc "nn-blockchain-api/pkg/rpc/ethereum"
@@ -24,10 +25,10 @@ type service struct {
 
 func NewService(ethRpcSvc ethereum_rpc.Service, log *logrus.Logger) (Service, error) {
 	if ethRpcSvc == nil {
-		return nil, errors.NewInternal("invalid ethereum rpc service")
+		return nil, gErrors.New("invalid ethereum rpc service")
 	}
 	if log == nil {
-		return nil, errors.NewInternal("invalid logger")
+		return nil, gErrors.New("invalid logger")
 	}
 	return &service{ethRpcSvc: ethRpcSvc, log: log}, nil
 }

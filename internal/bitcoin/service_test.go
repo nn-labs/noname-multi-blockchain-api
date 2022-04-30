@@ -1,10 +1,13 @@
-package bitcoin
+package bitcoin_test
 
 import (
 	"context"
+	"nn-blockchain-api/internal/bitcoin"
 	"nn-blockchain-api/pkg/errors"
-	rpc_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin"
-	mock_rpc_bitcoin "nn-blockchain-api/pkg/rpc/bitcoin/mocks"
+	bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin"
+
+	mock_bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin/mocks"
+
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -19,14 +22,14 @@ func TestNewService(t *testing.T) {
 	tests := []struct {
 		name      string
 		log       *logrus.Logger
-		btcRpcSvc rpc_bitcoin.Service
-		expect    func(*testing.T, Service, error)
+		btcRpcSvc bitcoin_rpc.Service
+		expect    func(*testing.T, bitcoin.Service, error)
 	}{
 		{
 			name:      "should return bitcoin service",
 			log:       logrus.New(),
-			btcRpcSvc: mock_rpc_bitcoin.NewMockService(controller),
-			expect: func(t *testing.T, s Service, err error) {
+			btcRpcSvc: mock_bitcoin_rpc.NewMockService(controller),
+			expect: func(t *testing.T, s bitcoin.Service, err error) {
 				assert.NotNil(t, s)
 				assert.Nil(t, err)
 			},
@@ -35,27 +38,27 @@ func TestNewService(t *testing.T) {
 			name:      "should return invalid btc rpc service",
 			btcRpcSvc: nil,
 			log:       logrus.New(),
-			expect: func(t *testing.T, s Service, err error) {
+			expect: func(t *testing.T, s bitcoin.Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
-				assert.EqualError(t, err, "code: 500; status: internal_error; message: invalid btc rpc service")
+				assert.EqualError(t, err, "invalid btc rpc service")
 			},
 		},
 		{
 			name:      "should return invalid logger",
-			btcRpcSvc: mock_rpc_bitcoin.NewMockService(controller),
+			btcRpcSvc: mock_bitcoin_rpc.NewMockService(controller),
 			log:       nil,
-			expect: func(t *testing.T, s Service, err error) {
+			expect: func(t *testing.T, s bitcoin.Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
-				assert.EqualError(t, err, "code: 500; status: internal_error; message: invalid logger")
+				assert.EqualError(t, err, "invalid logger")
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			svc, err := NewService(tc.btcRpcSvc, tc.log)
+			svc, err := bitcoin.NewService(tc.btcRpcSvc, tc.log)
 			tc.expect(t, svc, err)
 		})
 	}
@@ -65,12 +68,12 @@ func TestService_StatusNode(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 	network := "test"
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	status := rpc_bitcoin.StatusNode{
+	status := bitcoin_rpc.StatusNode{
 		Chain:                "test",
 		Blocks:               2138184,
 		Headers:              2138184,
@@ -189,23 +192,23 @@ func TestService_StatusNode(t *testing.T) {
 		Warnings: "Unknown new rules activated (versionbit 28)",
 	}
 
-	dto := &StatusNodeDTO{Network: network}
+	dto := &bitcoin.StatusNodeDTO{Network: network}
 
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *StatusNodeDTO
-		setup  func(ctx context.Context, dto *StatusNodeDTO)
-		expect func(t *testing.T, status *StatusNodeInfoDTO, err error)
+		dto    *bitcoin.StatusNodeDTO
+		setup  func(ctx context.Context, dto *bitcoin.StatusNodeDTO)
+		expect func(t *testing.T, status *bitcoin.StatusNodeInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *StatusNodeDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.StatusNodeDTO) {
 				btcRpcSvc.EXPECT().Status(ctx, dto.Network).Return(&status, nil)
 			},
-			expect: func(t *testing.T, status *StatusNodeInfoDTO, err error) {
+			expect: func(t *testing.T, status *bitcoin.StatusNodeInfoDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, status.Chain, network)
 			},
@@ -214,12 +217,12 @@ func TestService_StatusNode(t *testing.T) {
 			name: "should return failed check node status",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *StatusNodeDTO) {
-				btcRpcSvc.EXPECT().Status(ctx, dto.Network).Return(nil, ErrFailedGetStatusNode)
+			setup: func(ctx context.Context, dto *bitcoin.StatusNodeDTO) {
+				btcRpcSvc.EXPECT().Status(ctx, dto.Network).Return(nil, bitcoin.ErrFailedGetStatusNode)
 			},
-			expect: func(t *testing.T, status *StatusNodeInfoDTO, err error) {
+			expect: func(t *testing.T, status *bitcoin.StatusNodeInfoDTO, err error) {
 				assert.NotNil(t, err)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedGetStatusNode, ErrFailedGetStatusNode.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedGetStatusNode, bitcoin.ErrFailedGetStatusNode.Error()))
 			},
 		},
 	}
@@ -237,14 +240,14 @@ func TestService_CreateTransaction(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
 	tx := "transaction"
 	fee := 0.0000259
 
-	dto := &CreateRawTransactionDTO{
+	dto := &bitcoin.CreateRawTransactionDTO{
 		Utxo: []struct {
 			TxId     string `json:"txid" validate:"required"`
 			Vout     int64  `json:"vout" validate:"required"`
@@ -267,18 +270,18 @@ func TestService_CreateTransaction(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *CreateRawTransactionDTO
-		setup  func(ctx context.Context, dto *CreateRawTransactionDTO)
-		expect func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error)
+		dto    *bitcoin.CreateRawTransactionDTO
+		setup  func(ctx context.Context, dto *bitcoin.CreateRawTransactionDTO)
+		expect func(t *testing.T, createdTx *bitcoin.CreatedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *CreateRawTransactionDTO) {
-				btcRpcSvc.EXPECT().CreateTransaction(ctx, rpc_bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(&tx, &fee, nil)
+			setup: func(ctx context.Context, dto *bitcoin.CreateRawTransactionDTO) {
+				btcRpcSvc.EXPECT().CreateTransaction(ctx, bitcoin_rpc.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(&tx, &fee, nil)
 			},
-			expect: func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, createdTx *bitcoin.CreatedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, createdTx.Tx, tx)
 				assert.Equal(t, createdTx.Fee, fee)
@@ -288,12 +291,12 @@ func TestService_CreateTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *CreateRawTransactionDTO) {
-				btcRpcSvc.EXPECT().CreateTransaction(ctx, rpc_bitcoin.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, ErrFailedCreateTx)
+			setup: func(ctx context.Context, dto *bitcoin.CreateRawTransactionDTO) {
+				btcRpcSvc.EXPECT().CreateTransaction(ctx, bitcoin_rpc.UTXO(dto.Utxo), dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network).Return(nil, nil, bitcoin.ErrFailedCreateTx)
 			},
-			expect: func(t *testing.T, createdTx *CreatedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, createdTx *bitcoin.CreatedRawTransactionDTO, err error) {
 				assert.Nil(t, createdTx)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedCreateTx, ErrFailedCreateTx.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedCreateTx, bitcoin.ErrFailedCreateTx.Error()))
 			},
 		},
 	}
@@ -311,16 +314,16 @@ func TestService_DecodeTransaction(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &DecodeRawTransactionDTO{
+	dto := &bitcoin.DecodeRawTransactionDTO{
 		Tx:      "transaction",
 		Network: "test",
 	}
 
-	decodeTx := &rpc_bitcoin.DecodedTx{
+	decodeTx := &bitcoin_rpc.DecodedTx{
 		Txid:     "tx",
 		Hash:     "hash",
 		Version:  0,
@@ -381,18 +384,18 @@ func TestService_DecodeTransaction(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *DecodeRawTransactionDTO
-		setup  func(ctx context.Context, dto *DecodeRawTransactionDTO)
-		expect func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error)
+		dto    *bitcoin.DecodeRawTransactionDTO
+		setup  func(ctx context.Context, dto *bitcoin.DecodeRawTransactionDTO)
+		expect func(t *testing.T, decodeTx *bitcoin.DecodedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *DecodeRawTransactionDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.DecodeRawTransactionDTO) {
 				btcRpcSvc.EXPECT().DecodeTransaction(ctx, dto.Tx, dto.Network).Return(decodeTx, nil)
 			},
-			expect: func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, decodeTx *bitcoin.DecodedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, decodeTx.Txid, "tx")
 			},
@@ -401,12 +404,12 @@ func TestService_DecodeTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *DecodeRawTransactionDTO) {
-				btcRpcSvc.EXPECT().DecodeTransaction(ctx, dto.Tx, dto.Network).Return(nil, ErrFailedDecodeTx)
+			setup: func(ctx context.Context, dto *bitcoin.DecodeRawTransactionDTO) {
+				btcRpcSvc.EXPECT().DecodeTransaction(ctx, dto.Tx, dto.Network).Return(nil, bitcoin.ErrFailedDecodeTx)
 			},
-			expect: func(t *testing.T, decodeTx *DecodedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, decodeTx *bitcoin.DecodedRawTransactionDTO, err error) {
 				assert.Nil(t, decodeTx)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedDecodeTx, ErrFailedDecodeTx.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedDecodeTx, bitcoin.ErrFailedDecodeTx.Error()))
 			},
 		},
 	}
@@ -424,11 +427,11 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &FundForRawTransactionDTO{
+	dto := &bitcoin.FundForRawTransactionDTO{
 		CreatedTxHex:  "tx",
 		ChangeAddress: "address",
 		Network:       "test",
@@ -440,18 +443,18 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *FundForRawTransactionDTO
-		setup  func(ctx context.Context, dto *FundForRawTransactionDTO)
-		expect func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error)
+		dto    *bitcoin.FundForRawTransactionDTO
+		setup  func(ctx context.Context, dto *bitcoin.FundForRawTransactionDTO)
+		expect func(t *testing.T, fundedTx *bitcoin.FundedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *FundForRawTransactionDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.FundForRawTransactionDTO) {
 				btcRpcSvc.EXPECT().FundForTransaction(ctx, dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return(tx, &fee, nil)
 			},
-			expect: func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, fundedTx *bitcoin.FundedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, fundedTx.Tx, tx)
 				assert.Equal(t, fundedTx.Fee, fee)
@@ -461,12 +464,12 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *FundForRawTransactionDTO) {
-				btcRpcSvc.EXPECT().FundForTransaction(ctx, dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return("", nil, ErrFailedFundForTx)
+			setup: func(ctx context.Context, dto *bitcoin.FundForRawTransactionDTO) {
+				btcRpcSvc.EXPECT().FundForTransaction(ctx, dto.CreatedTxHex, dto.ChangeAddress, dto.Network).Return("", nil, bitcoin.ErrFailedFundForTx)
 			},
-			expect: func(t *testing.T, fundedTx *FundedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, fundedTx *bitcoin.FundedRawTransactionDTO, err error) {
 				assert.Nil(t, fundedTx)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedFundForTx, ErrFailedFundForTx.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedFundForTx, bitcoin.ErrFailedFundForTx.Error()))
 			},
 		},
 	}
@@ -484,11 +487,11 @@ func TestService_SignTransaction(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &SignRawTransactionDTO{
+	dto := &bitcoin.SignRawTransactionDTO{
 		Tx:         "tx",
 		PrivateKey: "private",
 		Utxo: []struct {
@@ -510,18 +513,18 @@ func TestService_SignTransaction(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *SignRawTransactionDTO
-		setup  func(ctx context.Context, dto *SignRawTransactionDTO)
-		expect func(t *testing.T, signedTx *SignedRawTransactionDTO, err error)
+		dto    *bitcoin.SignRawTransactionDTO
+		setup  func(ctx context.Context, dto *bitcoin.SignRawTransactionDTO)
+		expect func(t *testing.T, signedTx *bitcoin.SignedRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *SignRawTransactionDTO) {
-				btcRpcSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, rpc_bitcoin.UTXO(dto.Utxo), dto.Network).Return("hash", nil)
+			setup: func(ctx context.Context, dto *bitcoin.SignRawTransactionDTO) {
+				btcRpcSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin_rpc.UTXO(dto.Utxo), dto.Network).Return("hash", nil)
 			},
-			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, signedTx *bitcoin.SignedRawTransactionDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, signedTx.Hash, "hash")
 			},
@@ -530,12 +533,12 @@ func TestService_SignTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *SignRawTransactionDTO) {
-				btcRpcSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, rpc_bitcoin.UTXO(dto.Utxo), dto.Network).Return("", ErrFailedSignTx)
+			setup: func(ctx context.Context, dto *bitcoin.SignRawTransactionDTO) {
+				btcRpcSvc.EXPECT().SignTransaction(ctx, dto.Tx, dto.PrivateKey, bitcoin_rpc.UTXO(dto.Utxo), dto.Network).Return("", bitcoin.ErrFailedSignTx)
 			},
-			expect: func(t *testing.T, signedTx *SignedRawTransactionDTO, err error) {
+			expect: func(t *testing.T, signedTx *bitcoin.SignedRawTransactionDTO, err error) {
 				assert.Nil(t, signedTx)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedSignTx, ErrFailedSignTx.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedSignTx, bitcoin.ErrFailedSignTx.Error()))
 			},
 		},
 	}
@@ -553,11 +556,11 @@ func TestService_SendTransaction(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &SendRawTransactionDTO{
+	dto := &bitcoin.SendRawTransactionDTO{
 		SignedTx: "hash",
 		Network:  "test",
 	}
@@ -565,18 +568,18 @@ func TestService_SendTransaction(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *SendRawTransactionDTO
-		setup  func(ctx context.Context, dto *SendRawTransactionDTO)
-		expect func(t *testing.T, sentTx *SentRawTransactionDTO, err error)
+		dto    *bitcoin.SendRawTransactionDTO
+		setup  func(ctx context.Context, dto *bitcoin.SendRawTransactionDTO)
+		expect func(t *testing.T, sentTx *bitcoin.SentRawTransactionDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *SendRawTransactionDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.SendRawTransactionDTO) {
 				btcRpcSvc.EXPECT().SendTransaction(ctx, dto.SignedTx, dto.Network).Return("tx_id", nil)
 			},
-			expect: func(t *testing.T, sentTx *SentRawTransactionDTO, err error) {
+			expect: func(t *testing.T, sentTx *bitcoin.SentRawTransactionDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, sentTx.TxId, "tx_id")
 			},
@@ -585,12 +588,12 @@ func TestService_SendTransaction(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *SendRawTransactionDTO) {
-				btcRpcSvc.EXPECT().SendTransaction(ctx, dto.SignedTx, dto.Network).Return("", ErrFailedSendTx)
+			setup: func(ctx context.Context, dto *bitcoin.SendRawTransactionDTO) {
+				btcRpcSvc.EXPECT().SendTransaction(ctx, dto.SignedTx, dto.Network).Return("", bitcoin.ErrFailedSendTx)
 			},
-			expect: func(t *testing.T, sentTx *SentRawTransactionDTO, err error) {
+			expect: func(t *testing.T, sentTx *bitcoin.SentRawTransactionDTO, err error) {
 				assert.Nil(t, sentTx)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedSendTx, ErrFailedSendTx.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedSendTx, bitcoin.ErrFailedSendTx.Error()))
 			},
 		},
 	}
@@ -608,16 +611,16 @@ func TestService_WalletInfo(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &WalletDTO{
+	dto := &bitcoin.WalletDTO{
 		WalletId: "wallet_id",
 		Network:  "test",
 	}
 
-	info := &rpc_bitcoin.Info{
+	info := &bitcoin_rpc.Info{
 		Walletname:            "wallet_id",
 		Walletversion:         0,
 		Format:                "format",
@@ -639,18 +642,18 @@ func TestService_WalletInfo(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *WalletDTO
-		setup  func(ctx context.Context, dto *WalletDTO)
-		expect func(t *testing.T, walletInfo *WalletInfoDTO, err error)
+		dto    *bitcoin.WalletDTO
+		setup  func(ctx context.Context, dto *bitcoin.WalletDTO)
+		expect func(t *testing.T, walletInfo *bitcoin.WalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *WalletDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.WalletDTO) {
 				btcRpcSvc.EXPECT().WalletInfo(ctx, dto.WalletId, dto.Network).Return(info, nil)
 			},
-			expect: func(t *testing.T, walletInfo *WalletInfoDTO, err error) {
+			expect: func(t *testing.T, walletInfo *bitcoin.WalletInfoDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, walletInfo.Walletname, dto.WalletId)
 			},
@@ -659,12 +662,12 @@ func TestService_WalletInfo(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *WalletDTO) {
-				btcRpcSvc.EXPECT().WalletInfo(ctx, dto.WalletId, dto.Network).Return(nil, ErrFailedGetWalletInfo)
+			setup: func(ctx context.Context, dto *bitcoin.WalletDTO) {
+				btcRpcSvc.EXPECT().WalletInfo(ctx, dto.WalletId, dto.Network).Return(nil, bitcoin.ErrFailedGetWalletInfo)
 			},
-			expect: func(t *testing.T, walletInfo *WalletInfoDTO, err error) {
+			expect: func(t *testing.T, walletInfo *bitcoin.WalletInfoDTO, err error) {
 				assert.Nil(t, walletInfo)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedGetWalletInfo, ErrFailedGetWalletInfo.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedGetWalletInfo, bitcoin.ErrFailedGetWalletInfo.Error()))
 			},
 		},
 	}
@@ -682,29 +685,29 @@ func TestService_CreateWallet(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &CreateWalletDTO{
+	dto := &bitcoin.CreateWalletDTO{
 		Network: "test",
 	}
 
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *CreateWalletDTO
-		setup  func(ctx context.Context, dto *CreateWalletDTO)
-		expect func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error)
+		dto    *bitcoin.CreateWalletDTO
+		setup  func(ctx context.Context, dto *bitcoin.CreateWalletDTO)
+		expect func(t *testing.T, createdWallet *bitcoin.CreatedWalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *CreateWalletDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.CreateWalletDTO) {
 				btcRpcSvc.EXPECT().CreateWallet(ctx, dto.Network).Return("wallet_id", nil)
 			},
-			expect: func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error) {
+			expect: func(t *testing.T, createdWallet *bitcoin.CreatedWalletInfoDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, createdWallet.WalletId, "wallet_id")
 			},
@@ -713,12 +716,12 @@ func TestService_CreateWallet(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *CreateWalletDTO) {
-				btcRpcSvc.EXPECT().CreateWallet(ctx, dto.Network).Return("", ErrFailedCreateWallet)
+			setup: func(ctx context.Context, dto *bitcoin.CreateWalletDTO) {
+				btcRpcSvc.EXPECT().CreateWallet(ctx, dto.Network).Return("", bitcoin.ErrFailedCreateWallet)
 			},
-			expect: func(t *testing.T, createdWallet *CreatedWalletInfoDTO, err error) {
+			expect: func(t *testing.T, createdWallet *bitcoin.CreatedWalletInfoDTO, err error) {
 				assert.Nil(t, createdWallet)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedCreateWallet, ErrFailedCreateWallet.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedCreateWallet, bitcoin.ErrFailedCreateWallet.Error()))
 			},
 		},
 	}
@@ -736,11 +739,11 @@ func TestService_LoadWaller(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &LoadWalletDTO{
+	dto := &bitcoin.LoadWalletDTO{
 		WalletId: "wallet_id",
 		Network:  "test",
 	}
@@ -748,18 +751,18 @@ func TestService_LoadWaller(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *LoadWalletDTO
-		setup  func(ctx context.Context, dto *LoadWalletDTO)
-		expect func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error)
+		dto    *bitcoin.LoadWalletDTO
+		setup  func(ctx context.Context, dto *bitcoin.LoadWalletDTO)
+		expect func(t *testing.T, loadedWallet *bitcoin.LoadWalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *LoadWalletDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.LoadWalletDTO) {
 				btcRpcSvc.EXPECT().LoadWallet(ctx, dto.WalletId, dto.Network).Return(nil)
 			},
-			expect: func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error) {
+			expect: func(t *testing.T, loadedWallet *bitcoin.LoadWalletInfoDTO, err error) {
 				assert.Nil(t, err)
 			},
 		},
@@ -767,12 +770,12 @@ func TestService_LoadWaller(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *LoadWalletDTO) {
-				btcRpcSvc.EXPECT().LoadWallet(ctx, dto.WalletId, dto.Network).Return(ErrFailedLoadWallet)
+			setup: func(ctx context.Context, dto *bitcoin.LoadWalletDTO) {
+				btcRpcSvc.EXPECT().LoadWallet(ctx, dto.WalletId, dto.Network).Return(bitcoin.ErrFailedLoadWallet)
 			},
-			expect: func(t *testing.T, loadedWallet *LoadWalletInfoDTO, err error) {
+			expect: func(t *testing.T, loadedWallet *bitcoin.LoadWalletInfoDTO, err error) {
 				assert.Nil(t, loadedWallet)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedLoadWallet, ErrFailedLoadWallet.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedLoadWallet, bitcoin.ErrFailedLoadWallet.Error()))
 			},
 		},
 	}
@@ -790,11 +793,11 @@ func TestService_ImportAddress(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &ImportAddressDTO{
+	dto := &bitcoin.ImportAddressDTO{
 		Address:  "address",
 		WalletId: "wallet_id",
 		Network:  "test",
@@ -803,18 +806,18 @@ func TestService_ImportAddress(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *ImportAddressDTO
-		setup  func(ctx context.Context, dto *ImportAddressDTO)
-		expect func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error)
+		dto    *bitcoin.ImportAddressDTO
+		setup  func(ctx context.Context, dto *bitcoin.ImportAddressDTO)
+		expect func(t *testing.T, importedAddress *bitcoin.ImportAddressInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *ImportAddressDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.ImportAddressDTO) {
 				btcRpcSvc.EXPECT().ImportAddress(ctx, dto.Address, dto.WalletId, dto.Network).Return(nil)
 			},
-			expect: func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error) {
+			expect: func(t *testing.T, importedAddress *bitcoin.ImportAddressInfoDTO, err error) {
 				assert.Nil(t, err)
 			},
 		},
@@ -822,12 +825,12 @@ func TestService_ImportAddress(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *ImportAddressDTO) {
-				btcRpcSvc.EXPECT().ImportAddress(ctx, dto.Address, dto.WalletId, dto.Network).Return(ErrFailedImportAddress)
+			setup: func(ctx context.Context, dto *bitcoin.ImportAddressDTO) {
+				btcRpcSvc.EXPECT().ImportAddress(ctx, dto.Address, dto.WalletId, dto.Network).Return(bitcoin.ErrFailedImportAddress)
 			},
-			expect: func(t *testing.T, importedAddress *ImportAddressInfoDTO, err error) {
+			expect: func(t *testing.T, importedAddress *bitcoin.ImportAddressInfoDTO, err error) {
 				assert.Nil(t, importedAddress)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedImportAddress, ErrFailedImportAddress.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedImportAddress, bitcoin.ErrFailedImportAddress.Error()))
 			},
 		},
 	}
@@ -845,11 +848,11 @@ func TestService_RescanWallet(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &RescanWalletDTO{
+	dto := &bitcoin.RescanWalletDTO{
 		WalletId: "wallet_id",
 		Network:  "test",
 	}
@@ -857,18 +860,18 @@ func TestService_RescanWallet(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *RescanWalletDTO
-		setup  func(ctx context.Context, dto *RescanWalletDTO)
-		expect func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error)
+		dto    *bitcoin.RescanWalletDTO
+		setup  func(ctx context.Context, dto *bitcoin.RescanWalletDTO)
+		expect func(t *testing.T, rescanInfo *bitcoin.RescanWalletInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *RescanWalletDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.RescanWalletDTO) {
 				btcRpcSvc.EXPECT().RescanWallet(ctx, dto.WalletId, dto.Network).Return(nil)
 			},
-			expect: func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error) {
+			expect: func(t *testing.T, rescanInfo *bitcoin.RescanWalletInfoDTO, err error) {
 				assert.Nil(t, err)
 			},
 		},
@@ -876,12 +879,12 @@ func TestService_RescanWallet(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *RescanWalletDTO) {
-				btcRpcSvc.EXPECT().RescanWallet(ctx, dto.WalletId, dto.Network).Return(ErrFailedRescanWallet)
+			setup: func(ctx context.Context, dto *bitcoin.RescanWalletDTO) {
+				btcRpcSvc.EXPECT().RescanWallet(ctx, dto.WalletId, dto.Network).Return(bitcoin.ErrFailedRescanWallet)
 			},
-			expect: func(t *testing.T, rescanInfo *RescanWalletInfoDTO, err error) {
+			expect: func(t *testing.T, rescanInfo *bitcoin.RescanWalletInfoDTO, err error) {
 				assert.Nil(t, rescanInfo)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedRescanWallet, ErrFailedRescanWallet.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedRescanWallet, bitcoin.ErrFailedRescanWallet.Error()))
 			},
 		},
 	}
@@ -899,17 +902,17 @@ func TestService_ListUnspent(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	btcRpcSvc := mock_rpc_bitcoin.NewMockService(controller)
+	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := NewService(btcRpcSvc, &logrus.Logger{})
+	service, _ := bitcoin.NewService(btcRpcSvc, &logrus.Logger{})
 
-	dto := &ListUnspentDTO{
+	dto := &bitcoin.ListUnspentDTO{
 		Address:  "address",
 		WalletId: "wallet_id",
 		Network:  "test",
 	}
 
-	listUTXO := []*rpc_bitcoin.Unspent{
+	listUTXO := []*bitcoin_rpc.Unspent{
 		{
 			Txid:          "tx_id",
 			Vout:          1,
@@ -927,18 +930,18 @@ func TestService_ListUnspent(t *testing.T) {
 	tests := []struct {
 		name   string
 		ctx    context.Context
-		dto    *ListUnspentDTO
-		setup  func(ctx context.Context, dto *ListUnspentDTO)
-		expect func(t *testing.T, listUTXO *ListUnspentInfoDTO, err error)
+		dto    *bitcoin.ListUnspentDTO
+		setup  func(ctx context.Context, dto *bitcoin.ListUnspentDTO)
+		expect func(t *testing.T, listUTXO *bitcoin.ListUnspentInfoDTO, err error)
 	}{
 		{
 			name: "should return ok",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *ListUnspentDTO) {
+			setup: func(ctx context.Context, dto *bitcoin.ListUnspentDTO) {
 				btcRpcSvc.EXPECT().ListUnspent(ctx, dto.Address, dto.WalletId, dto.Network).Return(listUTXO, nil)
 			},
-			expect: func(t *testing.T, utxoInfo *ListUnspentInfoDTO, err error) {
+			expect: func(t *testing.T, utxoInfo *bitcoin.ListUnspentInfoDTO, err error) {
 				assert.Nil(t, err)
 			},
 		},
@@ -946,12 +949,12 @@ func TestService_ListUnspent(t *testing.T) {
 			name: "should return error",
 			ctx:  context.Background(),
 			dto:  dto,
-			setup: func(ctx context.Context, dto *ListUnspentDTO) {
-				btcRpcSvc.EXPECT().ListUnspent(ctx, dto.Address, dto.WalletId, dto.Network).Return(nil, ErrFailedGetUnspent)
+			setup: func(ctx context.Context, dto *bitcoin.ListUnspentDTO) {
+				btcRpcSvc.EXPECT().ListUnspent(ctx, dto.Address, dto.WalletId, dto.Network).Return(nil, bitcoin.ErrFailedGetUnspent)
 			},
-			expect: func(t *testing.T, utxoInfo *ListUnspentInfoDTO, err error) {
+			expect: func(t *testing.T, utxoInfo *bitcoin.ListUnspentInfoDTO, err error) {
 				assert.Nil(t, utxoInfo)
-				assert.Equal(t, err, errors.WithMessage(ErrFailedGetUnspent, ErrFailedGetUnspent.Error()))
+				assert.Equal(t, err, errors.WithMessage(bitcoin.ErrFailedGetUnspent, bitcoin.ErrFailedGetUnspent.Error()))
 			},
 		},
 	}

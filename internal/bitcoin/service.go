@@ -2,6 +2,7 @@ package bitcoin
 
 import (
 	"context"
+	gErrors "errors"
 	"github.com/sirupsen/logrus"
 	"nn-blockchain-api/pkg/errors"
 	bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin"
@@ -39,10 +40,10 @@ type service struct {
 
 func NewService(btcRpcSvc bitcoin_rpc.Service, log *logrus.Logger) (Service, error) {
 	if btcRpcSvc == nil {
-		return nil, errors.NewInternal("invalid btc rpc service")
+		return nil, gErrors.New("invalid btc rpc service")
 	}
 	if log == nil {
-		return nil, errors.NewInternal("invalid logger")
+		return nil, gErrors.New("invalid logger")
 	}
 	return &service{btcRpcSvc: btcRpcSvc, log: log}, nil
 }

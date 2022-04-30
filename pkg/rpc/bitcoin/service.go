@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"math/big"
-	"nn-blockchain-api/pkg/errors"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -44,7 +44,7 @@ type service struct {
 
 func NewService(btcClient Client) (Service, error) {
 	if btcClient == nil {
-		return nil, errors.NewInternal("invalid btc client")
+		return nil, errors.New("invalid bitcoin rpc client")
 	}
 	return &service{btcClient: btcClient}, nil
 }
@@ -82,7 +82,7 @@ func (s *service) Status(ctx context.Context, network string) (*StatusNode, erro
 	}
 
 	if msg.Error.Message != "" {
-		return nil, errors.NewInternal(msg.Error.Message)
+		return nil, errors.New(msg.Error.Message)
 	}
 
 	return &msg.Result, nil
@@ -123,7 +123,7 @@ func (s *service) GetCurrentFee(ctx context.Context, network string) (*float64, 
 	}
 
 	if msg.Error.Message != "" {
-		return nil, err
+		return nil, errors.New(msg.Error.Message)
 	}
 
 	var fee float64
@@ -165,7 +165,7 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 	// Get fee
 	feeRate, err := s.getCurrentFeeRate(ctx, network)
 	if err != nil {
-		return nil, nil, errors.NewInternal(err.Error())
+		return nil, nil, err
 	}
 
 	// Calculate all unspent amount
@@ -187,7 +187,7 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 
 		sourceUTXOHash, err := chainhash.NewHashFromStr(hashStr)
 		if err != nil {
-			return nil, nil, errors.NewInternal(err.Error())
+			return nil, nil, err
 		}
 
 		if amount <= sourceUtxosAmount.Int64() {
@@ -219,12 +219,12 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 	// create the transaction outputs
 	destAddress, err := btcutil.DecodeAddress(toAddress, chainParams)
 	if err != nil {
-		return nil, nil, errors.NewInternal(err.Error())
+		return nil, nil, err
 	}
 
 	destScript, err := txscript.PayToAddrScript(destAddress)
 	if err != nil {
-		return nil, nil, errors.NewInternal(err.Error())
+		return nil, nil, err
 	}
 
 	// tx out to send btc to user
@@ -236,7 +236,7 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 	//change = new(big.Int).Sub(change, totalFee)
 	if change.Cmp(big.NewInt(0)) == -1 {
 		//svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, nil, errors.NewInternal(err.Error())
+		return nil, nil, err
 	}
 
 	if change.Int64() != 0 {
@@ -259,13 +259,13 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 		changeSendToAddress, err := btcutil.DecodeAddress(fromAddress, chainParams)
 		if err != nil {
 			//svc.log.WithContext(ctx).Errorf(err.Error())
-			return nil, nil, errors.NewInternal(err.Error())
+			return nil, nil, err
 		}
 
 		changeSendToScript, err := txscript.PayToAddrScript(changeSendToAddress)
 		if err != nil {
 			//svc.log.WithContext(ctx).Errorf(err.Error())
-			return nil, nil, errors.NewInternal(err.Error())
+			return nil, nil, err
 		}
 
 		//tx out to send change back to us
@@ -281,7 +281,7 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 	if (amount - totalFee.Int64()) >= sourceUtxosAmount.Int64() {
 		//log.Fatal(errors.New("your balance too low for this transaction"))
 		//svc.log.WithContext(ctx).Errorf("your balance too low for this transaction")
-		return nil, nil, errors.NewInternal("your balance too low for this transaction")
+		return nil, nil, errors.New("your balance too low for this transaction")
 	}
 
 	//log.Printf("%-18s %s\n", "total fee:", totalFee)
@@ -295,7 +295,7 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 	if err != nil {
 		//log.Fatal(err)
 		//svc.log.WithContext(ctx).Errorf(err.Error())
-		return nil, nil, errors.NewInternal(err.Error())
+		return nil, nil, err
 	}
 
 	createdTx := hex.EncodeToString(notSignedTxBuf.Bytes())
@@ -335,7 +335,7 @@ func (s *service) CreateTransaction(ctx context.Context, utxos UTXO, fromAddress
 //	}
 //
 //	if msg.Error.Message != "" {
-//		return "", errors.NewInternal(msg.Error.Message)
+//		return "", errors.New(msg.Error.Message)
 //	}
 //
 //	return msg.Result, nil
@@ -373,7 +373,7 @@ func (s *service) DecodeTransaction(ctx context.Context, tx string, network stri
 	}
 
 	if msg.Error.Message != "" {
-		return nil, errors.NewInternal(msg.Error.Message)
+		return nil, errors.New(msg.Error.Message)
 	}
 
 	return &DecodedTx{
@@ -431,7 +431,7 @@ func (s *service) FundForTransaction(ctx context.Context, createdTx, changeAddre
 	}
 
 	if msg.Error.Message != "" {
-		return "", nil, errors.NewInternal(msg.Error.Message)
+		return "", nil, errors.New(msg.Error.Message)
 	}
 
 	return msg.Result.Hex, &msg.Result.Fee, nil
@@ -474,11 +474,11 @@ func (s *service) SignTransaction(ctx context.Context, tx, privateKey string, ut
 	}
 
 	if msg.Error.Message != "" {
-		return "", errors.NewInternal(msg.Error.Message)
+		return "", errors.New(msg.Error.Message)
 	}
 
 	if !msg.Result.Complete {
-		return "", errors.NewInternal("signing transaction not complete. Please try again")
+		return "", errors.New("signing transaction not complete. Please try again")
 	}
 
 	return msg.Result.Hex, nil
@@ -516,7 +516,7 @@ func (s *service) SendTransaction(ctx context.Context, signedTx, network string)
 	}
 
 	if msg.Error.Message != "" {
-		return "", errors.NewInternal(msg.Error.Message)
+		return "", errors.New(msg.Error.Message)
 	}
 
 	return msg.Result, nil
@@ -554,7 +554,7 @@ func (s *service) WalletInfo(ctx context.Context, walletId, network string) (*In
 	}
 
 	if msg.Error.Message != "" {
-		return nil, errors.NewInternal(msg.Error.Message)
+		return nil, errors.New(msg.Error.Message)
 	}
 
 	return &msg.Result, nil
@@ -601,11 +601,11 @@ func (s *service) CreateWallet(ctx context.Context, network string) (string, err
 	}
 
 	if msg.Result.Warning != "" {
-		return "", errors.NewInternal(msg.Result.Warning)
+		return "", errors.New(msg.Result.Warning)
 	}
 
 	if msg.Error.Message != "" {
-		return "", errors.NewInternal(msg.Error.Message)
+		return "", errors.New(msg.Error.Message)
 	}
 
 	return msg.Result.Name, nil
@@ -646,11 +646,11 @@ func (s *service) LoadWallet(ctx context.Context, walletId, network string) erro
 	}
 
 	if msg.Result.Warning != "" {
-		return errors.NewInternal(msg.Result.Warning)
+		return errors.New(msg.Result.Warning)
 	}
 
 	if msg.Error.Message != "" {
-		return errors.NewInternal(msg.Error.Message)
+		return errors.New(msg.Error.Message)
 	}
 
 	return nil
@@ -688,7 +688,7 @@ func (s *service) ImportAddress(ctx context.Context, address, walletId, network 
 	}
 
 	if msg.Error.Message != "" {
-		return errors.NewInternal(msg.Error.Message)
+		return errors.New(msg.Error.Message)
 	}
 
 	return nil
@@ -741,7 +741,7 @@ func (s *service) RescanWallet(ctx context.Context, walletId, network string) er
 		return nil
 	case err := <-errs:
 		if err != nil {
-			return errors.NewInternal(err.Error())
+			return err
 		}
 	}
 
@@ -780,7 +780,7 @@ func (s *service) ListUnspent(ctx context.Context, address, walletId, network st
 	}
 
 	if msg.Error.Message != "" {
-		return nil, errors.NewInternal(msg.Error.Message)
+		return nil, errors.New(msg.Error.Message)
 	}
 
 	return msg.Result, nil

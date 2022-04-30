@@ -16,6 +16,7 @@ import (
 	"math/big"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/service_mock.go
 type Service interface {
 	Status(ctx context.Context, network string) (*StatusNodeResponse, error)
 
@@ -37,7 +38,7 @@ type service struct {
 
 func NewService(ethClient Client) (Service, error) {
 	if ethClient == nil {
-		return nil, errors.New("invalid ethereum client")
+		return nil, errors.New("invalid ethereum rpc client")
 	}
 
 	return &service{ethClient: ethClient}, nil
@@ -332,7 +333,7 @@ func (s *service) GetNetworkId(ctx context.Context, network string) (*big.Int, e
 	version := new(big.Int)
 
 	if _, ok := version.SetString(msg.Result, 10); !ok {
-		return nil, fmt.Errorf("invalid net_version result %q", msg.Result)
+		return nil, errors.New(fmt.Sprintf("invalid net_version result %q", msg.Result))
 	}
 
 	return version, nil

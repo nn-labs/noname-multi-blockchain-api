@@ -19,26 +19,6 @@ type BaseResponse struct {
 	JsonRpc string `json:"jsonrpc"`
 }
 
-type BaseResponseWithIntResult struct {
-	BaseResponse
-	Result int `json:"result"`
-}
-
-type BaseResponseWithStringResult struct {
-	BaseResponse
-	Result string `json:"result"`
-}
-
-type BaseResponseWithBoolResult struct {
-	BaseResponse
-	Result bool `json:"result"`
-}
-
-type BaseResponseWithArrayResult struct {
-	BaseResponse
-	Result []string `json:"result"`
-}
-
 type StatusNodeResponse struct {
 	CurrentBlock        string `json:"currentBlock,omitempty"`
 	HealedBytecodeBytes string `json:"healedBytecodeBytes,omitempty"`
