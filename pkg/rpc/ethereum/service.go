@@ -333,7 +333,7 @@ func (s *service) GetNetworkId(ctx context.Context, network string) (*big.Int, e
 	version := new(big.Int)
 
 	if _, ok := version.SetString(msg.Result, 10); !ok {
-		return nil, errors.New(fmt.Sprintf("invalid net_version result %q", msg.Result))
+		return nil, fmt.Errorf("invalid net_version result %q", msg.Result)
 	}
 
 	return version, nil
