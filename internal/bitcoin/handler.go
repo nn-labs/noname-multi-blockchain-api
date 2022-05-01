@@ -25,7 +25,7 @@ func NewHandler(btcSvc Service) (*Handler, error) {
 }
 
 func (h *Handler) SetupRoutes(router chi.Router) {
-	router.Post("/status", h.HealthCheckHandler)
+	router.Post("/status", h.StatusNode)
 
 	// Transaction
 	router.Post("/create-raw-tx", h.CreateRawTransaction)
@@ -43,7 +43,7 @@ func (h *Handler) SetupRoutes(router chi.Router) {
 	router.Post("/list-utx", h.ListUnspent)
 }
 
-func (h *Handler) HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) StatusNode(w http.ResponseWriter, r *http.Request) {
 	var dto StatusNodeDTO
 
 	err := json.NewDecoder(r.Body).Decode(&dto)

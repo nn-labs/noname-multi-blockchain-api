@@ -13,6 +13,7 @@ type Config struct {
 
 	GRps
 	BtcRpc
+	EthRpc
 }
 
 type GRps struct {
@@ -24,6 +25,11 @@ type BtcRpc struct {
 	BtcRpcEndpointMain string `required:"true" envconfig:"BTC_RPC_ENDPOINT_MAIN"`
 	BtcRpcUser         string `required:"true" envconfig:"BTC_RPC_USER"`
 	BtcRpcPassword     string `required:"true" envconfig:"BTC_RPC_PASSWORD"`
+}
+
+type EthRpc struct {
+	EthRpcEndpointTest string `required:"true" envconfig:"ETH_RPC_ENDPOINT_TEST"`
+	EthRpcEndpointMain string `required:"true" envconfig:"ETH_RPC_ENDPOINT_MAIN"`
 }
 
 var (

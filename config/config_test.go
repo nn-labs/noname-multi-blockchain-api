@@ -15,6 +15,8 @@ func TestInit(t *testing.T) {
 		btcRpcEndpointMain string
 		btcRpcUser         string
 		btcRpcPassword     string
+		ethRpcEndpointTest string
+		ethRpcEndpointMain string
 	}
 
 	type args struct {
@@ -29,6 +31,8 @@ func TestInit(t *testing.T) {
 		os.Setenv("BTC_RPC_ENDPOINT_MAIN", env.btcRpcEndpointMain)
 		os.Setenv("BTC_RPC_USER", env.btcRpcUser)
 		os.Setenv("BTC_RPC_PASSWORD", env.btcRpcPassword)
+		os.Setenv("ETH_RPC_ENDPOINT_TEST", env.ethRpcEndpointTest)
+		os.Setenv("ETH_RPC_ENDPOINT_MAIN", env.ethRpcEndpointMain)
 	}
 
 	tests := []struct {
@@ -48,6 +52,8 @@ func TestInit(t *testing.T) {
 					btcRpcEndpointMain: "http://localhost",
 					btcRpcUser:         "user",
 					btcRpcPassword:     "password",
+					ethRpcEndpointTest: "http://localhost",
+					ethRpcEndpointMain: "http://localhost",
 				},
 			},
 			want: &Config{
@@ -61,6 +67,10 @@ func TestInit(t *testing.T) {
 					BtcRpcEndpointMain: "http://localhost",
 					BtcRpcUser:         "user",
 					BtcRpcPassword:     "password",
+				},
+				EthRpc: EthRpc{
+					EthRpcEndpointTest: "http://localhost",
+					EthRpcEndpointMain: "http://localhost",
 				},
 			},
 		},
