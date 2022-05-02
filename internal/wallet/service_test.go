@@ -3,8 +3,8 @@ package wallet
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"nn-blockchain-api/pkg/errors"
 	pb "nn-blockchain-api/pkg/grpc_client/proto/wallet"
 	grpc_mock "nn-blockchain-api/pkg/grpc_client/proto/wallet/mocks"
@@ -18,13 +18,13 @@ func TestNewService(t *testing.T) {
 	tests := []struct {
 		name         string
 		walletClient pb.WalletServiceClient
-		log          *logrus.Logger
+		logger       *zap.SugaredLogger
 		expect       func(*testing.T, Service, error)
 	}{
 		{
 			name:         "should return wallet service",
 			walletClient: grpc_mock.NewMockWalletServiceClient(controller),
-			log:          logrus.New(),
+			logger:       &zap.SugaredLogger{},
 			expect: func(t *testing.T, s Service, err error) {
 				assert.NotNil(t, s)
 				assert.Nil(t, err)
@@ -33,7 +33,7 @@ func TestNewService(t *testing.T) {
 		{
 			name:         "should return invalid wallet client",
 			walletClient: nil,
-			log:          logrus.New(),
+			logger:       &zap.SugaredLogger{},
 			expect: func(t *testing.T, s Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
@@ -43,7 +43,7 @@ func TestNewService(t *testing.T) {
 		{
 			name:         "should return invalid logger",
 			walletClient: grpc_mock.NewMockWalletServiceClient(controller),
-			log:          nil,
+			logger:       nil,
 			expect: func(t *testing.T, s Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
@@ -54,7 +54,7 @@ func TestNewService(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			svc, err := NewService(tc.walletClient, tc.log)
+			svc, err := NewService(tc.walletClient, tc.logger)
 			tc.expect(t, svc, err)
 		})
 	}
@@ -66,7 +66,7 @@ func TestService_CreateWallet(t *testing.T) {
 
 	mockWalletClient := grpc_mock.NewMockWalletServiceClient(controller)
 
-	service, _ := NewService(mockWalletClient, &logrus.Logger{})
+	service, _ := NewService(mockWalletClient, &zap.SugaredLogger{})
 
 	dto := &CoinNameDTO{
 		Name:     "BTC",
@@ -142,7 +142,7 @@ func TestService_CreateMnemonic(t *testing.T) {
 
 	mockWalletClient := grpc_mock.NewMockWalletServiceClient(controller)
 
-	service, _ := NewService(mockWalletClient, &logrus.Logger{})
+	service, _ := NewService(mockWalletClient, &zap.SugaredLogger{})
 
 	mnemonicReturns := "mnemonic"
 

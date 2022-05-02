@@ -3,8 +3,8 @@ package ethereum_test
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"nn-blockchain-api/internal/ethereum"
 	"nn-blockchain-api/pkg/errors"
 	ethereum_rpc "nn-blockchain-api/pkg/rpc/ethereum"
@@ -19,13 +19,13 @@ func TestNewService(t *testing.T) {
 	tests := []struct {
 		name      string
 		ethRpcSvc ethereum_rpc.Service
-		log       *logrus.Logger
+		logger    *zap.SugaredLogger
 		expect    func(*testing.T, ethereum.Service, error)
 	}{
 		{
 			name:      "should return ethereum service",
 			ethRpcSvc: mock_ethereum_rpc.NewMockService(controller),
-			log:       logrus.New(),
+			logger:    &zap.SugaredLogger{},
 			expect: func(t *testing.T, s ethereum.Service, err error) {
 				assert.NotNil(t, s)
 				assert.Nil(t, err)
@@ -34,7 +34,7 @@ func TestNewService(t *testing.T) {
 		{
 			name:      "should return invalid ethereum rpc service",
 			ethRpcSvc: nil,
-			log:       logrus.New(),
+			logger:    &zap.SugaredLogger{},
 			expect: func(t *testing.T, s ethereum.Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
@@ -44,7 +44,7 @@ func TestNewService(t *testing.T) {
 		{
 			name:      "should return invalid logger",
 			ethRpcSvc: mock_ethereum_rpc.NewMockService(controller),
-			log:       nil,
+			logger:    nil,
 			expect: func(t *testing.T, s ethereum.Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
@@ -55,7 +55,7 @@ func TestNewService(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			svc, err := ethereum.NewService(tc.ethRpcSvc, tc.log)
+			svc, err := ethereum.NewService(tc.ethRpcSvc, tc.logger)
 			tc.expect(t, svc, err)
 		})
 	}
@@ -67,7 +67,7 @@ func TestService_StatusNode(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &logrus.Logger{})
+	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
 
 	statusInfo := ethereum_rpc.StatusNodeResponse{
 		CurrentBlock:        "0x321",
@@ -139,7 +139,7 @@ func TestService_CreateTransaction(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &logrus.Logger{})
+	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
 
 	tx := "transaction"
 	fee := 0.000528288415914
@@ -200,7 +200,7 @@ func TestService_SignTransaction(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &logrus.Logger{})
+	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
 
 	signedTx := "signed_transaction"
 
@@ -258,7 +258,7 @@ func TestService_SendTransaction(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &logrus.Logger{})
+	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
 
 	dto := &ethereum.SendRawTransactionDTO{
 		SignedTx: "signed_tx",
