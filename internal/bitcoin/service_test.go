@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap"
 	"nn-blockchain-api/internal/bitcoin"
 	"nn-blockchain-api/pkg/errors"
+	"nn-blockchain-api/pkg/logger"
 	bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin"
 
 	mock_bitcoin_rpc "nn-blockchain-api/pkg/rpc/bitcoin/mocks"
@@ -71,7 +72,9 @@ func TestService_StatusNode(t *testing.T) {
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 	network := "test"
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	status := bitcoin_rpc.StatusNode{
 		Chain:                "test",
@@ -242,7 +245,9 @@ func TestService_CreateTransaction(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	tx := "transaction"
 	fee := 0.0000259
@@ -316,7 +321,9 @@ func TestService_DecodeTransaction(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.DecodeRawTransactionDTO{
 		Tx:      "transaction",
@@ -429,7 +436,9 @@ func TestService_FoundForRawTransaction(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.FundForRawTransactionDTO{
 		CreatedTxHex:  "tx",
@@ -489,7 +498,9 @@ func TestService_SignTransaction(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.SignRawTransactionDTO{
 		Tx:         "tx",
@@ -558,7 +569,9 @@ func TestService_SendTransaction(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.SendRawTransactionDTO{
 		SignedTx: "hash",
@@ -613,7 +626,9 @@ func TestService_WalletInfo(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.WalletDTO{
 		WalletId: "wallet_id",
@@ -687,7 +702,9 @@ func TestService_CreateWallet(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.CreateWalletDTO{
 		Network: "test",
@@ -741,7 +758,9 @@ func TestService_LoadWaller(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.LoadWalletDTO{
 		WalletId: "wallet_id",
@@ -795,7 +814,9 @@ func TestService_ImportAddress(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.ImportAddressDTO{
 		Address:  "address",
@@ -850,7 +871,9 @@ func TestService_RescanWallet(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.RescanWalletDTO{
 		WalletId: "wallet_id",
@@ -904,7 +927,9 @@ func TestService_ListUnspent(t *testing.T) {
 
 	btcRpcSvc := mock_bitcoin_rpc.NewMockService(controller)
 
-	service, _ := bitcoin.NewService(btcRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := bitcoin.NewService(btcRpcSvc, zapLogger)
 
 	dto := &bitcoin.ListUnspentDTO{
 		Address:  "address",

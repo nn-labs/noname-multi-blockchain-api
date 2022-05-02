@@ -1,13 +1,15 @@
-package wallet
+package wallet_test
 
 import (
 	"context"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+	"nn-blockchain-api/internal/wallet"
 	"nn-blockchain-api/pkg/errors"
 	pb "nn-blockchain-api/pkg/grpc_client/proto/wallet"
 	grpc_mock "nn-blockchain-api/pkg/grpc_client/proto/wallet/mocks"
+	"nn-blockchain-api/pkg/logger"
 	"testing"
 )
 
@@ -19,13 +21,13 @@ func TestNewService(t *testing.T) {
 		name         string
 		walletClient pb.WalletServiceClient
 		logger       *zap.SugaredLogger
-		expect       func(*testing.T, Service, error)
+		expect       func(*testing.T, wallet.Service, error)
 	}{
 		{
 			name:         "should return wallet service",
 			walletClient: grpc_mock.NewMockWalletServiceClient(controller),
 			logger:       &zap.SugaredLogger{},
-			expect: func(t *testing.T, s Service, err error) {
+			expect: func(t *testing.T, s wallet.Service, err error) {
 				assert.NotNil(t, s)
 				assert.Nil(t, err)
 			},
@@ -34,27 +36,27 @@ func TestNewService(t *testing.T) {
 			name:         "should return invalid wallet client",
 			walletClient: nil,
 			logger:       &zap.SugaredLogger{},
-			expect: func(t *testing.T, s Service, err error) {
+			expect: func(t *testing.T, s wallet.Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
-				assert.EqualError(t, err, "code: 500; status: internal_error; message: invalid wallet client")
+				assert.EqualError(t, err, "invalid wallet client")
 			},
 		},
 		{
 			name:         "should return invalid logger",
 			walletClient: grpc_mock.NewMockWalletServiceClient(controller),
 			logger:       nil,
-			expect: func(t *testing.T, s Service, err error) {
+			expect: func(t *testing.T, s wallet.Service, err error) {
 				assert.NotNil(t, err)
 				assert.Nil(t, s)
-				assert.EqualError(t, err, "code: 500; status: internal_error; message: invalid logger")
+				assert.EqualError(t, err, "invalid logger")
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			svc, err := NewService(tc.walletClient, tc.logger)
+			svc, err := wallet.NewService(tc.walletClient, tc.logger)
 			tc.expect(t, svc, err)
 		})
 	}
@@ -66,14 +68,16 @@ func TestService_CreateWallet(t *testing.T) {
 
 	mockWalletClient := grpc_mock.NewMockWalletServiceClient(controller)
 
-	service, _ := NewService(mockWalletClient, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := wallet.NewService(mockWalletClient, zapLogger)
 
-	dto := &CoinNameDTO{
+	dto := &wallet.CoinNameDTO{
 		Name:     "BTC",
 		Mnemonic: "mnemonic",
 	}
 
-	invalidWalletNameDto := &CoinNameDTO{
+	invalidWalletNameDto := &wallet.CoinNameDTO{
 		Name:     "ASD",
 		Mnemonic: "mnemonic",
 	}
@@ -89,22 +93,22 @@ func TestService_CreateWallet(t *testing.T) {
 		name         string
 		ctx          context.Context
 		walletClient pb.WalletServiceClient
-		dto          *CoinNameDTO
-		setup        func(context.Context, *CoinNameDTO)
-		expect       func(*testing.T, *DTO, error)
+		dto          *wallet.CoinNameDTO
+		setup        func(context.Context, *wallet.CoinNameDTO)
+		expect       func(*testing.T, *wallet.DTO, error)
 	}{
 		{
 			name:         "should return status ok",
 			ctx:          context.Background(),
 			walletClient: mockWalletClient,
 			dto:          dto,
-			setup: func(ctx context.Context, dto *CoinNameDTO) {
+			setup: func(ctx context.Context, dto *wallet.CoinNameDTO) {
 				mockWalletClient.EXPECT().CreateWallet(ctx, &pb.CreateWalletData{
 					WalletName: dto.Name,
 					Mnemonic:   &dto.Mnemonic,
 				}).Return(&pb.WalletInfo{Wallet: walletData}, nil)
 			},
-			expect: func(t *testing.T, w *DTO, err error) {
+			expect: func(t *testing.T, w *wallet.DTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, w.CoinName, dto.Name)
 			},
@@ -114,15 +118,15 @@ func TestService_CreateWallet(t *testing.T) {
 			ctx:          context.Background(),
 			walletClient: mockWalletClient,
 			dto:          invalidWalletNameDto,
-			setup: func(ctx context.Context, dto *CoinNameDTO) {
+			setup: func(ctx context.Context, dto *wallet.CoinNameDTO) {
 				mockWalletClient.EXPECT().CreateWallet(ctx, &pb.CreateWalletData{
 					WalletName: dto.Name,
 					Mnemonic:   &dto.Mnemonic,
-				}).Return(nil, ErrInvalidWalletType)
+				}).Return(nil, wallet.ErrInvalidWalletType)
 			},
-			expect: func(t *testing.T, w *DTO, err error) {
+			expect: func(t *testing.T, w *wallet.DTO, err error) {
 				assert.NotNil(t, err)
-				assert.Equal(t, errors.WithMessage(ErrInvalidWalletType, "code: 404; status: invalid_wallet_type"), err)
+				assert.Equal(t, err, errors.WithMessage(wallet.ErrInvalidWalletType, wallet.ErrInvalidWalletType.Error()))
 			},
 		},
 	}
@@ -142,16 +146,18 @@ func TestService_CreateMnemonic(t *testing.T) {
 
 	mockWalletClient := grpc_mock.NewMockWalletServiceClient(controller)
 
-	service, _ := NewService(mockWalletClient, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := wallet.NewService(mockWalletClient, zapLogger)
 
 	mnemonicReturns := "mnemonic"
 
-	dto := &MnemonicDTO{
+	dto := &wallet.MnemonicDTO{
 		Length:   "12",
 		Language: "english",
 	}
 
-	invalidDto := &MnemonicDTO{
+	invalidDto := &wallet.MnemonicDTO{
 		Length:   "123123",
 		Language: "english",
 	}
@@ -160,22 +166,22 @@ func TestService_CreateMnemonic(t *testing.T) {
 		name         string
 		ctx          context.Context
 		walletClient pb.WalletServiceClient
-		dto          *MnemonicDTO
-		setup        func(context.Context, *MnemonicDTO)
-		expect       func(*testing.T, *CreatedMnemonicDTO, error)
+		dto          *wallet.MnemonicDTO
+		setup        func(context.Context, *wallet.MnemonicDTO)
+		expect       func(*testing.T, *wallet.CreatedMnemonicDTO, error)
 	}{
 		{
 			name:         "should return status ok",
 			ctx:          context.Background(),
 			walletClient: mockWalletClient,
 			dto:          dto,
-			setup: func(ctx context.Context, dto *MnemonicDTO) {
+			setup: func(ctx context.Context, dto *wallet.MnemonicDTO) {
 				mockWalletClient.EXPECT().CreateMnemonic(ctx, &pb.CreateMnemonicData{
 					MnemonicLength: dto.Length,
 					Language:       dto.Language,
 				}).Return(&pb.MnemonicInfo{Mnemonic: mnemonicReturns}, nil)
 			},
-			expect: func(t *testing.T, mnemonic *CreatedMnemonicDTO, err error) {
+			expect: func(t *testing.T, mnemonic *wallet.CreatedMnemonicDTO, err error) {
 				assert.Nil(t, err)
 				assert.Equal(t, mnemonic.Mnemonic, mnemonicReturns)
 			},
@@ -185,15 +191,15 @@ func TestService_CreateMnemonic(t *testing.T) {
 			ctx:          context.Background(),
 			walletClient: mockWalletClient,
 			dto:          invalidDto,
-			setup: func(ctx context.Context, dto *MnemonicDTO) {
+			setup: func(ctx context.Context, dto *wallet.MnemonicDTO) {
 				mockWalletClient.EXPECT().CreateMnemonic(ctx, &pb.CreateMnemonicData{
 					MnemonicLength: dto.Length,
 					Language:       dto.Language,
-				}).Return(nil, ErrCreateMnemonic)
+				}).Return(nil, wallet.ErrCreateMnemonic)
 			},
-			expect: func(t *testing.T, mnemonic *CreatedMnemonicDTO, err error) {
+			expect: func(t *testing.T, mnemonic *wallet.CreatedMnemonicDTO, err error) {
 				assert.NotNil(t, err)
-				assert.Equal(t, errors.WithMessage(ErrCreateMnemonic, "code: 500; status: error_create_mnemonic"), err)
+				assert.Equal(t, err, errors.WithMessage(wallet.ErrCreateMnemonic, wallet.ErrCreateMnemonic.Error()))
 			},
 		},
 	}

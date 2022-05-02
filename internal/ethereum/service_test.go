@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"nn-blockchain-api/internal/ethereum"
 	"nn-blockchain-api/pkg/errors"
+	"nn-blockchain-api/pkg/logger"
 	ethereum_rpc "nn-blockchain-api/pkg/rpc/ethereum"
 	mock_ethereum_rpc "nn-blockchain-api/pkg/rpc/ethereum/mocks"
 	"testing"
@@ -67,7 +68,9 @@ func TestService_StatusNode(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := ethereum.NewService(ethRpcSvc, zapLogger)
 
 	statusInfo := ethereum_rpc.StatusNodeResponse{
 		CurrentBlock:        "0x321",
@@ -139,7 +142,9 @@ func TestService_CreateTransaction(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := ethereum.NewService(ethRpcSvc, zapLogger)
 
 	tx := "transaction"
 	fee := 0.000528288415914
@@ -200,7 +205,9 @@ func TestService_SignTransaction(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := ethereum.NewService(ethRpcSvc, zapLogger)
 
 	signedTx := "signed_transaction"
 
@@ -258,7 +265,9 @@ func TestService_SendTransaction(t *testing.T) {
 
 	ethRpcSvc := mock_ethereum_rpc.NewMockService(controller)
 
-	service, _ := ethereum.NewService(ethRpcSvc, &zap.SugaredLogger{})
+	newLogger, _ := logger.NewLogger("development")
+	zapLogger, _ := newLogger.SetupZapLogger()
+	service, _ := ethereum.NewService(ethRpcSvc, zapLogger)
 
 	dto := &ethereum.SendRawTransactionDTO{
 		SignedTx: "signed_tx",

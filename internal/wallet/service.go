@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"context"
+	gErrors "errors"
 	"go.uber.org/zap"
 	"nn-blockchain-api/pkg/errors"
 	pb "nn-blockchain-api/pkg/grpc_client/proto/wallet"
@@ -20,10 +21,10 @@ type service struct {
 
 func NewService(walletClient pb.WalletServiceClient, logger *zap.SugaredLogger) (Service, error) {
 	if walletClient == nil {
-		return nil, errors.NewInternal("invalid wallet client")
+		return nil, gErrors.New("invalid wallet client")
 	}
 	if logger == nil {
-		return nil, errors.NewInternal("invalid logger")
+		return nil, gErrors.New("invalid logger")
 	}
 	return &service{walletClient: walletClient, logger: logger}, nil
 }
