@@ -3,7 +3,7 @@ package ethereum
 import (
 	"context"
 	gErrors "errors"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"nn-blockchain-api/pkg/errors"
 	ethereum_rpc "nn-blockchain-api/pkg/rpc/ethereum"
 )
@@ -20,23 +20,23 @@ type Service interface {
 
 type service struct {
 	ethRpcSvc ethereum_rpc.Service
-	log       *logrus.Logger
+	logger    *zap.SugaredLogger
 }
 
-func NewService(ethRpcSvc ethereum_rpc.Service, log *logrus.Logger) (Service, error) {
+func NewService(ethRpcSvc ethereum_rpc.Service, logger *zap.SugaredLogger) (Service, error) {
 	if ethRpcSvc == nil {
 		return nil, gErrors.New("invalid ethereum rpc service")
 	}
-	if log == nil {
+	if logger == nil {
 		return nil, gErrors.New("invalid logger")
 	}
-	return &service{ethRpcSvc: ethRpcSvc, log: log}, nil
+	return &service{ethRpcSvc: ethRpcSvc, logger: logger}, nil
 }
 
 func (s *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*NodeInfoDTO, error) {
 	status, err := s.ethRpcSvc.Status(ctx, dto.Network)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("failed check node status: %v", err)
+		s.logger.Errorf("failed check node status: %v", err)
 		return nil, errors.WithMessage(ErrFailedGetStatusNode, err.Error())
 	}
 
@@ -63,7 +63,7 @@ func (s *service) StatusNode(ctx context.Context, dto *StatusNodeDTO) (*NodeInfo
 func (s *service) CreateTransaction(ctx context.Context, dto *CreateRawTransactionDTO) (*CreatedRawTransactionDTO, error) {
 	tx, fee, err := s.ethRpcSvc.CreateTransaction(ctx, dto.FromAddress, dto.ToAddress, dto.Amount, dto.Network)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("failed create transaction: %v", err)
+		s.logger.Errorf("failed create transaction: %v", err)
 		return nil, errors.WithMessage(ErrFailedCreateTx, err.Error())
 		//return nil, ErrFailedCreateTx
 	}
@@ -77,7 +77,7 @@ func (s *service) CreateTransaction(ctx context.Context, dto *CreateRawTransacti
 func (s *service) SignTransaction(ctx context.Context, dto *SignRawTransactionDTO) (*SignedRawTransactionDTO, error) {
 	signedTx, err := s.ethRpcSvc.SignTransaction(ctx, dto.Tx, dto.PrivateKey, dto.Network)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("failed sign transaction: %v", err)
+		s.logger.Errorf("failed sign transaction: %v", err)
 		return nil, errors.WithMessage(ErrFailedSignTx, err.Error())
 		//return nil, ErrFailedSignTx
 	}
@@ -90,7 +90,7 @@ func (s *service) SignTransaction(ctx context.Context, dto *SignRawTransactionDT
 func (s *service) SendTransaction(ctx context.Context, dto *SendRawTransactionDTO) (*SentRawTransactionDTO, error) {
 	txId, err := s.ethRpcSvc.SendTransaction(ctx, dto.SignedTx, dto.Network)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("failed send transaction: %v", err)
+		s.logger.Errorf("failed send transaction: %v", err)
 		return nil, errors.WithMessage(ErrFailedSendTx, err.Error())
 		//return nil, ErrFailedSendTx
 	}

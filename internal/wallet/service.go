@@ -2,7 +2,8 @@ package wallet
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
+	gErrors "errors"
+	"go.uber.org/zap"
 	"nn-blockchain-api/pkg/errors"
 	pb "nn-blockchain-api/pkg/grpc_client/proto/wallet"
 )
@@ -15,23 +16,23 @@ type Service interface {
 
 type service struct {
 	walletClient pb.WalletServiceClient
-	log          *logrus.Logger
+	logger       *zap.SugaredLogger
 }
 
-func NewService(walletClient pb.WalletServiceClient, log *logrus.Logger) (Service, error) {
+func NewService(walletClient pb.WalletServiceClient, logger *zap.SugaredLogger) (Service, error) {
 	if walletClient == nil {
-		return nil, errors.NewInternal("invalid wallet client")
+		return nil, gErrors.New("invalid wallet client")
 	}
-	if log == nil {
-		return nil, errors.NewInternal("invalid logger")
+	if logger == nil {
+		return nil, gErrors.New("invalid logger")
 	}
-	return &service{walletClient: walletClient, log: log}, nil
+	return &service{walletClient: walletClient, logger: logger}, nil
 }
 
-func (svc *service) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*DTO, error) {
-	response, err := svc.walletClient.CreateWallet(ctx, &pb.CreateWalletData{WalletName: walletName, Mnemonic: mnemonic})
+func (s *service) CreateWallet(ctx context.Context, walletName string, mnemonic *string) (*DTO, error) {
+	response, err := s.walletClient.CreateWallet(ctx, &pb.CreateWalletData{WalletName: walletName, Mnemonic: mnemonic})
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf("failed to create wallet: %v", err)
+		s.logger.Errorf("failed to create wallet: %v", err)
 		return nil, errors.WithMessage(ErrInvalidWalletType, err.Error())
 	}
 
@@ -43,10 +44,10 @@ func (svc *service) CreateWallet(ctx context.Context, walletName string, mnemoni
 	}, nil
 }
 
-func (svc *service) CreateMnemonic(ctx context.Context, length, language string) (*CreatedMnemonicDTO, error) {
-	response, err := svc.walletClient.CreateMnemonic(ctx, &pb.CreateMnemonicData{MnemonicLength: length, Language: language})
+func (s *service) CreateMnemonic(ctx context.Context, length, language string) (*CreatedMnemonicDTO, error) {
+	response, err := s.walletClient.CreateMnemonic(ctx, &pb.CreateMnemonicData{MnemonicLength: length, Language: language})
 	if err != nil {
-		svc.log.WithContext(ctx).Errorf("failed to create mnemonic: %v", err)
+		s.logger.Errorf("failed to create mnemonic: %v", err)
 		return nil, errors.WithMessage(ErrCreateMnemonic, err.Error())
 	}
 
